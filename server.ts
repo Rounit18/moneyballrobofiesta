@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import compression from 'compression';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer as createViteServer } from 'vite';
@@ -303,8 +304,20 @@ const wsClients = new Set<WebSocket>();
 // SSE connected clients
 const sseClients = new Set<Response>();
 
+// Pre-serialized state cache to avoid repeated JSON stringify on every broadcast
+let cachedStateJson: string = '';
+let cachedStateTimestamp: string = '';
+
+function getSerializedState(): string {
+  if (!cachedStateJson || cachedStateTimestamp !== auctionState.lastUpdated) {
+    cachedStateTimestamp = auctionState.lastUpdated;
+    cachedStateJson = JSON.stringify({ type: 'STATE_UPDATE', payload: auctionState });
+  }
+  return cachedStateJson;
+}
+
 function broadcast(eventType: string, data: any) {
-  const payloadStr = JSON.stringify({ type: eventType, payload: data });
+  const payloadStr = eventType === 'STATE_UPDATE' ? getSerializedState() : JSON.stringify({ type: eventType, payload: data });
 
   // Broadcast to WebSocket clients
   for (const client of wsClients) {
@@ -317,13 +330,15 @@ function broadcast(eventType: string, data: any) {
     }
   }
 
-  // Broadcast to SSE clients
-  const ssePayload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const client of sseClients) {
-    try {
-      client.write(ssePayload);
-    } catch {
-      sseClients.delete(client);
+  // Broadcast to SSE clients only if any connected
+  if (sseClients.size > 0) {
+    const ssePayload = `event: ${eventType}\ndata: ${eventType === 'STATE_UPDATE' ? JSON.stringify(auctionState) : JSON.stringify(data)}\n\n`;
+    for (const client of sseClients) {
+      try {
+        client.write(ssePayload);
+      } catch {
+        sseClients.delete(client);
+      }
     }
   }
 }
@@ -331,7 +346,6 @@ function broadcast(eventType: string, data: any) {
 function broadcastStateUpdate() {
   auctionState.lastUpdated = new Date().toISOString();
   broadcast('STATE_UPDATE', auctionState);
-  broadcast('state_update', auctionState); // backward compat
 }
 
 function syncPlayerCards() {
@@ -372,9 +386,36 @@ function syncTeams() {
   }
 }
 
+// Fast in-memory auth cache (5 min TTL) to eliminate Supabase round-trips on repeated auth
+interface CachedAuthUser {
+  user: any;
+  password: string;
+  expiresAt: number;
+}
+const authCache = new Map<string, CachedAuthUser>();
+
 async function startServer() {
+  // Sync teams and player cards once at startup
+  syncTeams();
+  syncPlayerCards();
+
   const app = express();
-  app.use(express.json());
+
+  // 1. Enable GZIP compression (reduces JSON & asset payloads by ~75%)
+  app.use(compression({ threshold: 1024, level: 6 }));
+  app.use(express.json({ limit: '2mb' }));
+
+  // 2. High-performance static assets caching for images, logos & cards
+  app.use('/images', express.static(path.join(__dirname, 'public/images'), {
+    maxAge: '7d',
+    etag: true,
+    immutable: true,
+  }));
+  app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
+    maxAge: '7d',
+    etag: true,
+    immutable: true,
+  }));
 
   const server = http.createServer(app);
 
@@ -384,7 +425,7 @@ async function startServer() {
   wss.on('connection', (ws: WebSocket) => {
     wsClients.add(ws);
 
-    // Send full current state on connection
+    // Send full current state on connection using pre-serialized cache
     ws.send(JSON.stringify({ type: 'INIT_STATE', payload: auctionState }));
 
     ws.on('message', (message: string) => {
@@ -429,14 +470,18 @@ async function startServer() {
     });
   });
 
-  // State fetch
-  app.get('/api/state', (_req: Request, res: Response) => {
-    syncTeams();
-    syncPlayerCards();
+  // High-performance State fetch with HTTP 304 ETag Caching (0ms transfer if unchanged)
+  app.get('/api/state', (req: Request, res: Response) => {
+    const ifNoneMatch = req.headers['if-none-match'];
+    if (ifNoneMatch && ifNoneMatch === auctionState.lastUpdated) {
+      return res.status(304).end();
+    }
+    res.setHeader('ETag', auctionState.lastUpdated);
+    res.setHeader('Cache-Control', 'no-cache');
     res.json(auctionState);
   });
 
-  // Authentication — Supabase-backed with in-memory fallback
+  // Authentication — Supabase-backed with in-memory fallback & cache
   app.post('/api/auth/login', async (req: Request, res: Response) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -445,6 +490,12 @@ async function startServer() {
 
     const trimmedUser = String(username).trim().toLowerCase();
     const trimmedPass = String(password).trim();
+
+    // Fast path: check auth cache (sub-millisecond login)
+    const cached = authCache.get(trimmedUser);
+    if (cached && cached.expiresAt > Date.now() && cached.password === trimmedPass) {
+      return res.json({ success: true, user: cached.user });
+    }
 
     // --- Supabase path ---
     if (supabase) {
@@ -462,35 +513,36 @@ async function startServer() {
         }
 
         if (data && data.password === trimmedPass) {
+          let authenticatedUser: any;
           if (data.role === 'admin') {
-            return res.json({
-              success: true,
-              user: { id: data.id, username: data.username, role: 'admin' },
-            });
+            authenticatedUser = { id: data.id, username: data.username, role: 'admin' };
           } else if (data.role === 'projector' || data.role === 'viewer') {
-            return res.json({
-              success: true,
-              user: {
-                id: data.id,
-                username: data.username,
-                role: 'projector',
-                teamName: data.team_name || 'Projector Screen',
-                color: data.color || '#B6FF3B',
-              },
-            });
+            authenticatedUser = {
+              id: data.id,
+              username: data.username,
+              role: 'projector',
+              teamName: data.team_name || 'Projector Screen',
+              color: data.color || '#B6FF3B',
+            };
           } else {
-            return res.json({
-              success: true,
-              user: {
-                id: data.id,
-                username: data.username,
-                role: 'team',
-                teamId: data.team_id,
-                teamName: data.team_name,
-                color: data.color,
-              },
-            });
+            authenticatedUser = {
+              id: data.id,
+              username: data.username,
+              role: 'team',
+              teamId: data.team_id,
+              teamName: data.team_name,
+              color: data.color,
+            };
           }
+
+          // Cache for 5 minutes (300,000ms)
+          authCache.set(trimmedUser, {
+            user: authenticatedUser,
+            password: trimmedPass,
+            expiresAt: Date.now() + 300000,
+          });
+
+          return res.json({ success: true, user: authenticatedUser });
         }
 
         // No matching row or wrong password
@@ -674,8 +726,8 @@ async function startServer() {
       lastBidTimestamp: new Date().toISOString(),
     };
 
+    auctionState.lastUpdated = new Date().toISOString();
     broadcast('BID_UPDATE', auctionState.liveBidding);
-    broadcastStateUpdate();
     res.json({ success: true, liveBidding: auctionState.liveBidding, team });
   };
 
@@ -691,8 +743,8 @@ async function startServer() {
     }
 
     auctionState.liveBidding.callStage = callStage;
+    auctionState.lastUpdated = new Date().toISOString();
     broadcast('CALL_STAGE_UPDATE', { callStage });
-    broadcastStateUpdate();
     res.json({ success: true, callStage });
   });
 

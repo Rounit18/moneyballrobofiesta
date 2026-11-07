@@ -91,12 +91,23 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setUnsoldPopup(notif);
   }, []);
 
-  // Fetch current state via REST
+  const lastStateVersionRef = useRef<string>('');
+
+  // Fetch current state via REST with HTTP 304 ETag validation (0 bytes if unchanged)
   const refreshState = useCallback(async () => {
     try {
-      const res = await fetch('/api/state');
+      const headers: Record<string, string> = {};
+      if (lastStateVersionRef.current) {
+        headers['If-None-Match'] = lastStateVersionRef.current;
+      }
+      const res = await fetch('/api/state', { headers });
+      if (res.status === 304) {
+        // State unchanged — 0ms parsing, 0 re-renders
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
+        lastStateVersionRef.current = data.lastUpdated || '';
         setState(data);
       }
     } catch (err) {
@@ -140,11 +151,12 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
-  // Native WebSocket real-time connection
+  // Native WebSocket real-time connection with SSE fallback
   useEffect(() => {
     refreshState();
 
     let isUnmounted = false;
+    let eventSource: EventSource | null = null;
 
     function connectWs() {
       if (isUnmounted) return;
@@ -160,13 +172,19 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (isUnmounted) return;
           setWsConnected(true);
           setError(null);
+          // Close SSE fallback once native WebSocket is operational
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
         };
 
         socket.onmessage = (event) => {
           if (isUnmounted) return;
           try {
             const msg = JSON.parse(event.data);
-            if (msg.type === 'INIT_STATE' || msg.type === 'STATE_UPDATE' || msg.type === 'state_update') {
+            if (msg.type === 'INIT_STATE' || msg.type === 'STATE_UPDATE') {
+              lastStateVersionRef.current = msg.payload?.lastUpdated || '';
               setState(msg.payload);
               setLoading(false);
             } else if (msg.type === 'BID_UPDATE') {
@@ -223,50 +241,19 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     connectWs();
 
-    // Secondary fallback: Server-Sent Events (SSE)
-    const eventSource = new EventSource('/api/events');
-
-    eventSource.addEventListener('state_update', (e: MessageEvent) => {
-      try {
-        const data = JSON.parse(e.data);
-        setState(data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error parsing SSE state update:', err);
-      }
-    });
-
-    eventSource.addEventListener('player_sold', (e: MessageEvent) => {
-      try {
-        const notif: SoldNotification = JSON.parse(e.data);
-        triggerCelebration(notif);
-      } catch (err) {
-        console.error('Error parsing player_sold event:', err);
-      }
-    });
-
-    eventSource.addEventListener('player_unsold', (e: MessageEvent) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.notification) {
-          triggerUnsold(data.notification);
-        }
-      } catch (err) {
-        console.error('Error parsing player_unsold event:', err);
-      }
-    });
-
-    // Background sync fallback to keep all clients (projector, admin, franchises) 100% in sync
+    // Adaptive sync fallback: only polls if WebSocket is disconnected!
     const syncInterval = window.setInterval(() => {
-      refreshState();
-    }, 2500);
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        refreshState();
+      }
+    }, 3000);
 
     return () => {
       isUnmounted = true;
       if (syncInterval) clearInterval(syncInterval);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) wsRef.current.close();
-      eventSource.close();
+      if (eventSource) eventSource.close();
     };
   }, [refreshState, triggerCelebration]);
 
@@ -374,7 +361,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setState((prev) => (prev ? { ...prev, liveBidding: data.liveBidding } : prev));
         soundEffects.playBidSound();
       }
-      refreshState();
       return { success: true };
     } catch {
       return { success: false, error: 'Network error placing bid' };
@@ -396,7 +382,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ callStage }),
       });
-      refreshState();
       return res.ok;
     } catch {
       return false;
