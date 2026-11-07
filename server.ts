@@ -4,6 +4,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 import type {
   AuctionState,
   Player,
@@ -21,8 +23,34 @@ import type {
 } from './src/types/auction.ts';
 import { INITIAL_PLAYERS } from './src/data/initialPlayers.ts';
 
+dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Supabase client (server-side only, using secret key)
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      global: {
+        headers: {
+          apikey: SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+      },
+    })
+  : null;
+
+if (!supabase) {
+  console.warn('[AUTH] Supabase not configured — falling back to in-memory auth. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env');
+} else {
+  console.log('[AUTH] Supabase client initialized for', SUPABASE_URL);
+}
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -408,33 +436,75 @@ async function startServer() {
     res.json(auctionState);
   });
 
-  // Authentication
-  app.post('/api/auth/login', (req: Request, res: Response) => {
+  // Authentication — Supabase-backed with in-memory fallback
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
     const { username, password } = req.body;
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    let trimmedUser = String(username).trim().toLowerCase();
+    const trimmedUser = String(username).trim().toLowerCase();
     const trimmedPass = String(password).trim();
 
-    if (USERNAME_ALIASES[trimmedUser]) {
-      trimmedUser = USERNAME_ALIASES[trimmedUser];
+    // --- Supabase path ---
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, username, password, role, team_id, team_name, color')
+          .eq('username', trimmedUser)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 = row not found; anything else is a real DB error
+          console.error('[AUTH] Supabase query error:', error.message);
+          return res.status(500).json({ error: 'Auth service error. Please try again.' });
+        }
+
+        if (data && data.password === trimmedPass) {
+          if (data.role === 'admin') {
+            return res.json({
+              success: true,
+              user: { id: data.id, username: data.username, role: 'admin' },
+            });
+          } else {
+            return res.json({
+              success: true,
+              user: {
+                id: data.id,
+                username: data.username,
+                role: 'team',
+                teamId: data.team_id,
+                teamName: data.team_name,
+                color: data.color,
+              },
+            });
+          }
+        }
+
+        // No matching row or wrong password
+        return res.status(401).json({ error: 'Invalid username or password.' });
+      } catch (err) {
+        console.error('[AUTH] Unexpected Supabase error:', err);
+        return res.status(500).json({ error: 'Auth service unavailable. Please try again.' });
+      }
     }
 
-    if (trimmedUser === 'admin' && (trimmedPass === 'moneyball2026' || trimmedPass === 'admin123' || trimmedPass === 'admin')) {
+    // --- In-memory fallback (Supabase not configured) ---
+    let resolvedUser = trimmedUser;
+    if (USERNAME_ALIASES[resolvedUser]) {
+      resolvedUser = USERNAME_ALIASES[resolvedUser];
+    }
+
+    if (resolvedUser === 'admin' && (trimmedPass === 'moneyball2026' || trimmedPass === 'admin123' || trimmedPass === 'admin')) {
       return res.json({
         success: true,
-        user: {
-          id: 'user-admin',
-          username: 'admin',
-          role: 'admin',
-        },
+        user: { id: 'user-admin', username: 'admin', role: 'admin' },
       });
     }
 
     const team = auctionState.teams.find(
-      (t) => t.username.toLowerCase() === trimmedUser && t.password === trimmedPass
+      (t) => t.username.toLowerCase() === resolvedUser && t.password === trimmedPass
     );
 
     if (team) {
@@ -451,7 +521,7 @@ async function startServer() {
       });
     }
 
-    return res.status(401).json({ error: 'Invalid credentials. Please verify your team username and password.' });
+    return res.status(401).json({ error: 'Invalid username or password.' });
   });
 
   // ADMIN: Set Global Event State
@@ -1377,7 +1447,9 @@ async function startServer() {
   }
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Moneyball Server running on http://0.0.0.0:${PORT} with WebSocket on ws://0.0.0.0:${PORT}/ws`);
+    console.log(`\n🚀 Moneyball Server ready!`);
+    console.log(`   Open in browser → http://localhost:${PORT}`);
+    console.log(`   WebSocket       → ws://localhost:${PORT}/ws\n`);
   });
 }
 
