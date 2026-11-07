@@ -45,14 +45,17 @@ async function searchPlayerCard(name) {
 
     for (const term of terms) {
       const cleanTerm = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const res = await fetch(`https://www.fut.gg/players/?name=${encodeURIComponent(cleanTerm)}`, {
+      const res = await fetch(`https://www.fut.gg/players/?quality_id=%5B1%5D&name=${encodeURIComponent(cleanTerm)}`, {
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
       });
       if (!res.ok) continue;
       const html = await res.text();
-      const match = html.match(/https:\/\/game-assets\.fut\.gg\/cdn-cgi\/image\/[^"]*futgg-player-item-card\/[^"]+/);
-      if (match) {
-        return match[0].replace("width=300", "width=600");
+      const regex = /<img[^>]*src=\"([^\"]+futgg-player-item-card[^\"]+)\"[^>]*alt=\"([^\"]*)\"/g;
+      let m;
+      while ((m = regex.exec(html)) !== null) {
+        if (m[2].includes(' - Rare') || m[2].includes(' - Common')) {
+          return m[1].replace("width=300", "width=600");
+        }
       }
     }
   } catch (e) {

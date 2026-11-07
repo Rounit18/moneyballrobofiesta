@@ -69,24 +69,31 @@ async function fetchFromUrl(url) {
   }
 }
 
+// Extract ONLY the authentic Gold card (marked "Rare" or "Common" on fut.gg)
 async function fetchCardFromPlayerId(id) {
   const text = await fetchFromUrl(`https://www.fut.gg/players/${id}/`);
   if (!text) return null;
-  const match = text.match(/https:\/\/game-assets\.fut\.gg\/cdn-cgi\/image\/[^\"*]+futgg-player-item-card\/[^\"*]+/);
-  if (match) {
-    return match[0].replace('width=300', 'width=600');
+  const regex = /<img[^>]*src=\"([^\"]+futgg-player-item-card[^\"]+)\"[^>]*alt=\"([^\"]*)\"/g;
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    if (m[2].includes(' - Rare') || m[2].includes(' - Common')) {
+      return m[1].replace('width=300', 'width=600');
+    }
   }
   return null;
 }
 
+// Search specifically with quality_id=[1] (Gold) and match only Rare or Common gold cards
 async function searchCardOnFutGG(query, preferredSlug) {
-  const text = await fetchFromUrl(`https://www.fut.gg/players/?name=${encodeURIComponent(query)}`);
+  const text = await fetchFromUrl(`https://www.fut.gg/players/?quality_id=%5B1%5D&name=${encodeURIComponent(query)}`);
   if (!text) return null;
-  const regex = /href=\"\/players\/(\d+)-([^\/]+)\/[^\"]*\"[\s\S]*?<img[^>]*src=\"([^\"]+)\"/g;
+  const regex = /href=\"\/players\/(\d+)-([^\/]+)\/[^\"]*\"[\s\S]*?<img[^>]*src=\"([^\"]+futgg-player-item-card[^\"]+)\"[^>]*alt=\"([^\"]*)\"/g;
   let m;
   const list = [];
   while ((m = regex.exec(text)) !== null) {
-    list.push({ id: m[1], slug: m[2], cardUrl: m[3].replace('width=300', 'width=600') });
+    if (m[4].includes(' - Rare') || m[4].includes(' - Common')) {
+      list.push({ id: m[1], slug: m[2], cardUrl: m[3].replace('width=300', 'width=600') });
+    }
   }
 
   if (preferredSlug) {
