@@ -35,5 +35,6 @@ INSERT INTO users (username, password, role, team_id, team_name, color) VALUES
   ('acmilan',    'password123', 'team',  'team-acmilan',    'AC Milan',          '#FB090B'),
   ('juventus',   'password123', 'team',  'team-juventus',   'Juventus',          '#000000'),
   ('alnassr',    'password123', 'team',  'team-alnassr',    'Al-Nassr',          '#FFD600'),
-  ('intermiami', 'password123', 'team',  'team-intermiami', 'Inter Miami',       '#F7B5CD')
+  ('intermiami', 'password123', 'team',  'team-intermiami', 'Inter Miami',       '#F7B5CD'),
+  ('projector',  'projector123', 'projector', null,         'Projector Screen',  '#B6FF3B')
 ON CONFLICT (username) DO NOTHING;

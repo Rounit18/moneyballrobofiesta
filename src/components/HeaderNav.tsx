@@ -146,18 +146,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           )}
 
-          {/* Viewer Projector Screen Button */}
-          {onToggleViewer && (
-            <button
-              onClick={onToggleViewer}
-              className="bg-[#B6FF3B] hover:bg-black hover:text-[#B6FF3B] text-black px-2.5 py-1.5 border-2 border-black brutal-shadow-sm font-mono text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
-              title="Projector / Big Screen Mode"
-            >
-              <Tv className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">PROJECTOR</span>
-            </button>
-          )}
-
           {/* Manual Refresh */}
           <button
             onClick={handleManualRefresh}
@@ -167,15 +155,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
 
-          {/* User Account / Switcher */}
+          {/* User Account / Logout */}
           {currentUser ? (
             <div className="flex items-center gap-2">
-              <button
-                onClick={onOpenQuickSwitch}
-                className="bg-white hover:bg-[#FFF8E7] text-black border-2 border-black px-2.5 py-1 brutal-shadow-sm flex items-center gap-2 cursor-pointer transition-all"
+              <div
+                className="bg-white text-black border-2 border-black px-2.5 py-1 brutal-shadow-sm flex items-center gap-2"
               >
                 {currentUser.role === 'admin' ? (
                   <Shield className="w-3.5 h-3.5 text-black" />
+                ) : currentUser.role === 'projector' ? (
+                  <Tv className="w-3.5 h-3.5 text-black" />
                 ) : userTeam?.logo ? (
                   <TeamLogo
                     logo={userTeam.logo}
@@ -190,8 +179,12 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   />
                 )}
                 <div className="text-left font-mono">
-                  <div className="text-[10px] font-black uppercase leading-tight truncate max-w-[100px]">
-                    {currentUser.role === 'admin' ? 'AUCTIONEER' : userTeam?.teamName}
+                  <div className="text-[10px] font-black uppercase leading-tight truncate max-w-[120px]">
+                    {currentUser.role === 'admin'
+                      ? 'AUCTIONEER'
+                      : currentUser.role === 'projector'
+                      ? 'PROJECTOR SCREEN'
+                      : userTeam?.teamName}
                   </div>
                   {userTeam && (
                     <div className="text-[9px] text-[#00C853] font-black leading-tight">
@@ -199,7 +192,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
 
               <button
                 onClick={logout}
@@ -209,15 +202,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
-          ) : (
-            <button
-              onClick={onOpenQuickSwitch}
-              className="bg-[#FFD600] text-black border-2 border-black px-3 py-1 brutal-shadow-sm font-mono font-black text-xs uppercase cursor-pointer hover:bg-black hover:text-white transition-all flex items-center gap-1.5"
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>SIGN IN</span>
-            </button>
-          )}
+          ) : null}
         </div>
       </div>
 

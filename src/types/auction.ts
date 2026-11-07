@@ -220,7 +220,7 @@ export interface AuctionState {
 export interface AuthUser {
   id: string;
   username: string;
-  role: 'admin' | 'team' | 'viewer';
+  role: 'admin' | 'team' | 'viewer' | 'projector';
   teamId?: string;
   teamName?: string;
   color?: string;

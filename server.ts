@@ -467,6 +467,17 @@ async function startServer() {
               success: true,
               user: { id: data.id, username: data.username, role: 'admin' },
             });
+          } else if (data.role === 'projector' || data.role === 'viewer') {
+            return res.json({
+              success: true,
+              user: {
+                id: data.id,
+                username: data.username,
+                role: 'projector',
+                teamName: data.team_name || 'Projector Screen',
+                color: data.color || '#B6FF3B',
+              },
+            });
           } else {
             return res.json({
               success: true,
@@ -500,6 +511,19 @@ async function startServer() {
       return res.json({
         success: true,
         user: { id: 'user-admin', username: 'admin', role: 'admin' },
+      });
+    }
+
+    if (resolvedUser === 'projector' && (trimmedPass === 'projector123' || trimmedPass === 'projector')) {
+      return res.json({
+        success: true,
+        user: {
+          id: 'user-projector',
+          username: 'projector',
+          role: 'projector',
+          teamName: 'Projector Screen',
+          color: '#B6FF3B',
+        },
       });
     }
 

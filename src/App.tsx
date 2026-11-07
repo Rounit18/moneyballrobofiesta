@@ -14,7 +14,6 @@ import { TransferMarketView } from './components/TransferMarketView.tsx';
 import { TransactionsAuditView } from './components/TransactionsAuditView.tsx';
 import { SoldPoppingModal } from './components/SoldPoppingModal.tsx';
 import { UnsoldPoppingModal } from './components/UnsoldPoppingModal.tsx';
-import { QuickAccountSwitcher } from './components/QuickAccountSwitcher.tsx';
 import { BackgroundSpotlight } from './components/BackgroundSpotlight.tsx';
 import { Shield, Eye, Tv } from 'lucide-react';
 
@@ -32,12 +31,12 @@ const MainAuctionContent: React.FC = () => {
     unsoldPopup,
     dismissUnsoldPopup,
     loading,
+    logout,
   } = useAuction();
 
   const [currentTab, setCurrentTab] = useState<NavTab>('auction');
   const [adminViewMode, setAdminViewMode] = useState<'admin_desk' | 'user_simulation' | 'viewer_broadcast'>('admin_desk');
   const [isViewerScreen, setIsViewerScreen] = useState<boolean>(false);
-  const [showQuickSwitch, setShowQuickSwitch] = useState<boolean>(false);
 
   // 1. First Visit: Intro Video
   if (!hasSeenIntro) {
@@ -67,15 +66,21 @@ const MainAuctionContent: React.FC = () => {
   }
 
   // 3. Dedicated Projector / Big Screen Mode (PRD Section 4.3 & 15)
-  if (isViewerScreen || adminViewMode === 'viewer_broadcast') {
+  const isProjectorUser = currentUser?.role === 'projector' || currentUser?.role === 'viewer';
+
+  if (isViewerScreen || adminViewMode === 'viewer_broadcast' || isProjectorUser) {
     return (
       <div className="min-h-screen bg-[#FFF8E7] flex flex-col text-black relative">
         <BackgroundSpotlight />
         <div className="relative z-10 flex flex-col min-h-screen">
           <ViewerSimulationView
             onExitViewer={() => {
-              setIsViewerScreen(false);
-              setAdminViewMode('admin_desk');
+              if (isProjectorUser) {
+                logout();
+              } else {
+                setIsViewerScreen(false);
+                setAdminViewMode('admin_desk');
+              }
             }}
           />
           {soldPopup && (
@@ -95,7 +100,7 @@ const MainAuctionContent: React.FC = () => {
     );
   }
 
-  // 4. Not Logged In: Login Screen (With option to launch Viewer Screen)
+  // 4. Not Logged In: Login Screen
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-[#FFF8E7] flex flex-col relative text-black">
@@ -104,21 +109,10 @@ const MainAuctionContent: React.FC = () => {
           <HeaderNav
             activeTab={currentTab}
             onSelectTab={(tab) => setCurrentTab(tab as NavTab)}
-            onOpenQuickSwitch={() => setShowQuickSwitch(true)}
-            onToggleViewer={() => setIsViewerScreen(true)}
             onReplayIntro={replayIntro}
             isViewerMode={false}
           />
-          <LoginScreen
-            onReplayIntro={replayIntro}
-            onOpenViewer={() => setIsViewerScreen(true)}
-          />
-          <QuickAccountSwitcher
-            isOpen={showQuickSwitch}
-            onClose={() => setShowQuickSwitch(false)}
-            onSelectViewer={() => setIsViewerScreen(true)}
-            isViewerMode={false}
-          />
+          <LoginScreen />
         </div>
       </div>
     );
@@ -137,8 +131,6 @@ const MainAuctionContent: React.FC = () => {
         <HeaderNav
           activeTab={currentTab}
           onSelectTab={(tab) => setCurrentTab(tab as NavTab)}
-          onOpenQuickSwitch={() => setShowQuickSwitch(true)}
-          onToggleViewer={() => setIsViewerScreen(true)}
           onReplayIntro={replayIntro}
           isViewerMode={false}
         />
@@ -232,13 +224,7 @@ const MainAuctionContent: React.FC = () => {
           />
         )}
 
-        {/* Fast Account Switcher */}
-        <QuickAccountSwitcher
-          isOpen={showQuickSwitch}
-          onClose={() => setShowQuickSwitch(false)}
-          onSelectViewer={() => setIsViewerScreen(true)}
-          isViewerMode={isViewerScreen}
-        />
+
 
         {/* Global Footer */}
         <footer className="w-full bg-white border-t-4 border-black py-6 text-xs text-black font-mono">
