@@ -10,7 +10,7 @@ interface PreAuctionViewProps {
 }
 
 export const PreAuctionView: React.FC<PreAuctionViewProps> = ({ onGoToAdmin }) => {
-  const { state, currentUser, startAuction, replayIntro } = useAuction();
+  const { state, currentUser, startAuction } = useAuction();
   const [countdown, setCountdown] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 0,
     minutes: 42,
@@ -94,16 +94,7 @@ export const PreAuctionView: React.FC<PreAuctionViewProps> = ({ onGoToAdmin }) =
           </div>
         </div>
 
-        {/* Watch Intro Video Button */}
-        <div className="mt-5 flex justify-center">
-          <CyberButton
-            title="Watch Official Intro Video"
-            onClick={replayIntro}
-            leftIcon={<Film className="w-4 h-4" />}
-            variant="ghost"
-            size="sm"
-          />
-        </div>
+
 
         {/* Admin Gavel Armed Strip */}
         {isAdmin && (

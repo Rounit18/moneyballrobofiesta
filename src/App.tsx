@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AuctionProvider, useAuction } from './context/AuctionContext.tsx';
 import { HeaderNav } from './components/HeaderNav.tsx';
-import { IntroVideoModal } from './components/IntroVideoModal.tsx';
 import { LoginScreen } from './components/LoginScreen.tsx';
 import { PreAuctionView } from './components/PreAuctionView.tsx';
 import { UserLiveAuctionView } from './components/UserLiveAuctionView.tsx';
@@ -23,9 +22,6 @@ const MainAuctionContent: React.FC = () => {
   const {
     state,
     currentUser,
-    hasSeenIntro,
-    markIntroSeen,
-    replayIntro,
     soldPopup,
     dismissSoldPopup,
     unsoldPopup,
@@ -37,11 +33,6 @@ const MainAuctionContent: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('auction');
   const [adminViewMode, setAdminViewMode] = useState<'admin_desk' | 'user_simulation' | 'viewer_broadcast'>('admin_desk');
   const [isViewerScreen, setIsViewerScreen] = useState<boolean>(false);
-
-  // 1. First Visit: Intro Video
-  if (!hasSeenIntro) {
-    return <IntroVideoModal onComplete={markIntroSeen} />;
-  }
 
   // 2. Loading State: Neo-Brutalist Blocky Preloader
   if (loading && !state) {
@@ -109,7 +100,6 @@ const MainAuctionContent: React.FC = () => {
           <HeaderNav
             activeTab={currentTab}
             onSelectTab={(tab) => setCurrentTab(tab as NavTab)}
-            onReplayIntro={replayIntro}
             isViewerMode={false}
           />
           <LoginScreen />
@@ -131,7 +121,6 @@ const MainAuctionContent: React.FC = () => {
         <HeaderNav
           activeTab={currentTab}
           onSelectTab={(tab) => setCurrentTab(tab as NavTab)}
-          onReplayIntro={replayIntro}
           isViewerMode={false}
         />
 

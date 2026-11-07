@@ -3,12 +3,7 @@ import { Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuction } from '../context/AuctionContext.tsx';
 import { soundEffects } from '../utils/audio.ts';
 
-interface LoginScreenProps {
-  onReplayIntro?: () => void;
-  onOpenViewer?: () => void;
-}
-
-export const LoginScreen: React.FC<LoginScreenProps> = () => {
+export const LoginScreen: React.FC = () => {
   const { login } = useAuction();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
