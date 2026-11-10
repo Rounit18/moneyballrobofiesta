@@ -2,7 +2,6 @@ import express, { Request, Response } from 'express';
 import compression from 'compression';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
