@@ -359,10 +359,11 @@ async function ensureStateLoaded() {
         .single();
       if (data && data.password) {
         const parsed = JSON.parse(data.password);
-        if (parsed && parsed.players && parsed.teams) {
+        if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
           auctionState = parsed;
           cachedStateTimestamp = '';
           cachedStateJson = '';
+          stateLoadedFromDb = true;
           console.log(`[STATE] Loaded persistent auction state from Supabase! (Status: ${auctionState.status}, Sales: ${auctionState.salesHistory?.length || 0})`);
           return;
         }
@@ -378,10 +379,11 @@ async function ensureStateLoaded() {
     if (fs.existsSync(filePath)) {
       const fileData = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(fileData);
-      if (parsed && parsed.players && parsed.teams) {
+      if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
         auctionState = parsed;
         cachedStateTimestamp = '';
         cachedStateJson = '';
+        stateLoadedFromDb = true;
         console.log(`[STATE] Loaded persistent auction state from local file! (Status: ${auctionState.status}, Sales: ${auctionState.salesHistory?.length || 0})`);
       }
     }
@@ -401,18 +403,39 @@ async function persistState() {
     fs.writeFileSync(filePath, JSON.stringify(auctionState), 'utf-8');
   } catch {}
 
-  // 2. Save to Supabase database
+  // 2. Save to Supabase database with onConflict: 'username'
   if (supabase) {
     try {
       await supabase.from('users').upsert({
         username: '__auction_state__',
         password: JSON.stringify(auctionState),
         role: 'system'
-      });
+      }, { onConflict: 'username' });
     } catch (e) {
       console.error('[STATE] Supabase save error:', e);
     }
   }
+}
+
+// Sequential lot forward finder (maintains set order without improper jumpy switching)
+function getNextUpcomingPlayer(fromId: string | null): Player | null {
+  if (!auctionState.players || auctionState.players.length === 0) return null;
+  const currentIdx = auctionState.players.findIndex((p) => p.id === fromId);
+
+  // 1. First search forward within the current active set
+  const nextInActiveSet = auctionState.players.find(
+    (p, idx) => idx > currentIdx && p.setId === auctionState.activeSetId && p.status === 'upcoming'
+  );
+  if (nextInActiveSet) return nextInActiveSet;
+
+  // 2. Next search forward across any upcoming lot
+  const nextForward = auctionState.players.find(
+    (p, idx) => idx > currentIdx && p.status === 'upcoming'
+  );
+  if (nextForward) return nextForward;
+
+  // 3. Fallback: wrap-around and find any remaining upcoming player
+  return auctionState.players.find((p) => p.status === 'upcoming') || null;
 }
 
 function broadcastStateUpdate() {
@@ -519,13 +542,17 @@ app.use('/api', async (_req, _res, next) => {
   });
 
   // High-performance State fetch with HTTP 304 ETag Caching (0ms transfer if unchanged)
-  app.get('/api/state', (req: Request, res: Response) => {
+  app.get('/api/state', async (req: Request, res: Response) => {
+    if (!stateLoadedFromDb) {
+      await ensureStateLoaded();
+    }
     const ifNoneMatch = req.headers['if-none-match'];
-    if (ifNoneMatch && ifNoneMatch === auctionState.lastUpdated) {
+    const cleanEtag = (ifNoneMatch || '').replace(/^W\//, '').replace(/"/g, '').trim();
+    if (cleanEtag && cleanEtag === auctionState.lastUpdated) {
       return res.status(304).end();
     }
-    res.setHeader('ETag', auctionState.lastUpdated);
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('ETag', `"${auctionState.lastUpdated}"`);
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.json(auctionState);
   });
 
@@ -1004,8 +1031,8 @@ app.use('/api', async (_req, _res, next) => {
     auctionState.recentSoldNotification = notif;
     auctionState.liveBidding.callStage = 'SOLD';
 
-    // Auto-advance to next upcoming player
-    const nextUpcoming = auctionState.players.find((p) => p.status === 'upcoming');
+    // Auto-advance to next upcoming player sequentially
+    const nextUpcoming = getNextUpcomingPlayer(player.id);
     if (nextUpcoming) {
       auctionState.currentPlayerId = nextUpcoming.id;
       if (nextUpcoming.setId) auctionState.activeSetId = nextUpcoming.setId;
@@ -1076,8 +1103,8 @@ app.use('/api', async (_req, _res, next) => {
     };
     auctionState.transactions.unshift(txRecord);
 
-    // Auto-advance to next upcoming player
-    const nextUpcoming = auctionState.players.find((p) => p.status === 'upcoming');
+    // Auto-advance to next upcoming player sequentially
+    const nextUpcoming = getNextUpcomingPlayer(player.id);
     if (nextUpcoming) {
       auctionState.currentPlayerId = nextUpcoming.id;
       if (nextUpcoming.setId) auctionState.activeSetId = nextUpcoming.setId;

@@ -101,15 +101,18 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const headers: Record<string, string> = {};
       if (lastStateVersionRef.current) {
-        headers['If-None-Match'] = lastStateVersionRef.current;
+        headers['If-None-Match'] = `"${lastStateVersionRef.current}"`;
       }
       const res = await fetch('/api/state', { headers });
       if (res.status === 304) {
-        // State unchanged — 0ms parsing, 0 re-renders
+        // State unchanged — 0ms parsing, 0 re-renders, 0 lag
         return;
       }
       if (res.ok) {
         const data = await res.json();
+        if (data.lastUpdated && data.lastUpdated === lastStateVersionRef.current) {
+          return;
+        }
         lastStateVersionRef.current = data.lastUpdated || '';
         setState(data);
       }
