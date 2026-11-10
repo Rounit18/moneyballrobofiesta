@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import compression from 'compression';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -342,8 +343,80 @@ function broadcast(eventType: string, data: any) {
   }
 }
 
-function broadcastStateUpdate() {
+let stateLoadedFromDb = false;
+
+async function ensureStateLoaded() {
+  if (stateLoadedFromDb) return;
+  stateLoadedFromDb = true;
+
+  // 1. Try Supabase persistent state
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('password')
+        .eq('username', '__auction_state__')
+        .single();
+      if (data && data.password) {
+        const parsed = JSON.parse(data.password);
+        if (parsed && parsed.players && parsed.teams) {
+          auctionState = parsed;
+          cachedStateTimestamp = '';
+          cachedStateJson = '';
+          console.log(`[STATE] Loaded persistent auction state from Supabase! (Status: ${auctionState.status}, Sales: ${auctionState.salesHistory?.length || 0})`);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('[STATE] Supabase load error:', e);
+    }
+  }
+
+  // 2. Try Local File fallback
+  try {
+    const filePath = path.join(__dirname, 'auction_state.json');
+    if (fs.existsSync(filePath)) {
+      const fileData = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      if (parsed && parsed.players && parsed.teams) {
+        auctionState = parsed;
+        cachedStateTimestamp = '';
+        cachedStateJson = '';
+        console.log(`[STATE] Loaded persistent auction state from local file! (Status: ${auctionState.status}, Sales: ${auctionState.salesHistory?.length || 0})`);
+      }
+    }
+  } catch (e) {
+    console.error('[STATE] Local file load error:', e);
+  }
+}
+
+async function persistState() {
   auctionState.lastUpdated = new Date().toISOString();
+  cachedStateTimestamp = auctionState.lastUpdated;
+  cachedStateJson = JSON.stringify({ type: 'STATE_UPDATE', payload: auctionState });
+
+  // 1. Save to local file
+  try {
+    const filePath = path.join(__dirname, 'auction_state.json');
+    fs.writeFileSync(filePath, JSON.stringify(auctionState), 'utf-8');
+  } catch {}
+
+  // 2. Save to Supabase database
+  if (supabase) {
+    try {
+      await supabase.from('users').upsert({
+        username: '__auction_state__',
+        password: JSON.stringify(auctionState),
+        role: 'system'
+      });
+    } catch (e) {
+      console.error('[STATE] Supabase save error:', e);
+    }
+  }
+}
+
+function broadcastStateUpdate() {
+  persistState();
   broadcast('STATE_UPDATE', auctionState);
 }
 
@@ -414,6 +487,14 @@ app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
   etag: true,
   immutable: true,
 }));
+
+// Ensure persistent state from Supabase / file is loaded for all API calls
+app.use('/api', async (_req, _res, next) => {
+  if (!stateLoadedFromDb) {
+    await ensureStateLoaded();
+  }
+  next();
+});
 
 // SSE Stream endpoint for fallback
   app.get('/api/events', (req: Request, res: Response) => {
@@ -694,6 +775,7 @@ app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
     };
 
     auctionState.lastUpdated = new Date().toISOString();
+    persistState();
     broadcast('BID_UPDATE', auctionState.liveBidding);
     res.json({ success: true, liveBidding: auctionState.liveBidding, team });
   };
@@ -711,6 +793,7 @@ app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
 
     auctionState.liveBidding.callStage = callStage;
     auctionState.lastUpdated = new Date().toISOString();
+    persistState();
     broadcast('CALL_STAGE_UPDATE', { callStage });
     res.json({ success: true, callStage });
   });

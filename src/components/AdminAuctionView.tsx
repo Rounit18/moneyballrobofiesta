@@ -550,8 +550,13 @@ export const AdminAuctionView: React.FC = () => {
                 const activeTeamId = selectedBidderTeamId || state?.teams[0]?.id || '';
 
                 const handleQuickBid = async (inc: number) => {
-                  if (!activeTeamId) return;
-                  const newBid = Math.max(currentPlayer?.basePrice || 10, liveBidding.currentBid + inc);
+                  if (!activeTeamId || !currentPlayer) return;
+                  let newBid: number;
+                  if (!liveBidding.currentBidderTeamId) {
+                    newBid = inc > 0 ? currentPlayer.basePrice : Math.max(10, currentPlayer.basePrice + inc);
+                  } else {
+                    newBid = Math.max(currentPlayer.basePrice, Number((liveBidding.currentBid + inc).toFixed(1)));
+                  }
                   setDeskBidError(null);
                   const res = await recordBid(newBid, activeTeamId);
                   if (!res.success) {

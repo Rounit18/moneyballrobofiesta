@@ -73,16 +73,40 @@ export const UserLiveAuctionView: React.FC<UserLiveAuctionViewProps> = ({ isPart
     }
   };
 
-  const handleAdjustBid = async (increment: number) => {
-    const targetTeamId = selectedBidderTeamId || teams[0]?.id;
-    if (!targetTeamId) return;
+  // Franchise team direct bid action
+  const handleTeamDirectBid = async (increment: number) => {
+    if (!myTeam || !currentPlayer) return;
+    setBidActionError(null);
 
-    // If no bids placed yet, opening bid can be at base price or base + increment
     let newBid: number;
     if (!liveBidding.currentBidderTeamId) {
-      newBid = Math.max(currentPlayer?.basePrice || 10, (currentPlayer?.basePrice || 10) + (increment > 0 ? increment - 2.5 : 0));
+      newBid = currentPlayer.basePrice;
     } else {
-      newBid = Math.max(currentPlayer?.basePrice || 10, liveBidding.currentBid + increment);
+      newBid = Number((liveBidding.currentBid + increment).toFixed(1));
+    }
+
+    if (newBid > myTeam.remainingBalance) {
+      setBidActionError(`Purse insufficient! You only have £${myTeam.remainingBalance.toFixed(1)}M remaining.`);
+      return;
+    }
+
+    if (myTeam.boughtPlayers.length >= myTeam.maxSquadSize) {
+      setBidActionError(`Squad limit reached (${myTeam.maxSquadSize}/${myTeam.maxSquadSize} players).`);
+      return;
+    }
+
+    await handlePlaceBid(newBid, myTeam.id);
+  };
+
+  const handleAdjustBid = async (increment: number) => {
+    const targetTeamId = selectedBidderTeamId || teams[0]?.id;
+    if (!targetTeamId || !currentPlayer) return;
+
+    let newBid: number;
+    if (!liveBidding.currentBidderTeamId) {
+      newBid = increment > 0 ? currentPlayer.basePrice : Math.max(10, currentPlayer.basePrice + increment);
+    } else {
+      newBid = Math.max(currentPlayer.basePrice, Number((liveBidding.currentBid + increment).toFixed(1)));
     }
 
     await handlePlaceBid(newBid, targetTeamId);
@@ -404,6 +428,144 @@ export const UserLiveAuctionView: React.FC<UserLiveAuctionViewProps> = ({ isPart
                   className="px-3 py-1.5 bg-[#FFF8E7] hover:bg-black hover:text-white border-2 border-black font-black text-[11px] uppercase cursor-pointer"
                 >
                   NEXT LOT ▶
+                </button>
+              </div>
+
+              {bidActionError && (
+                <div className="p-2 bg-red-100 border-2 border-red-600 text-red-700 font-bold text-xs flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{bidActionError}</span>
+                </div>
+              )}
+            </div>
+          ) : myTeam && currentPlayer ? (
+            /* ==================== FRANCHISE TEAM LIVE BIDDING DESK ==================== */
+            <div className="bg-white border-4 border-black brutal-shadow-lg p-5 font-mono space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b-2 border-black">
+                <div className="flex items-center gap-2">
+                  <TeamLogo logo={myTeam.logo} name={myTeam.teamName} size="xs" className="w-5 h-5 object-contain flex-shrink-0" />
+                  <span className="font-heading font-black text-xs uppercase text-black">
+                    {myTeam.teamName} · LIVE BIDDING DESK
+                  </span>
+                </div>
+                <span className="text-[10px] font-black bg-[#B6FF3B] text-black px-1.5 py-0.5 border border-black uppercase">
+                  ACTIVE FRANCHISE
+                </span>
+              </div>
+
+              {/* GAVEL WARNING STAGE BANNER */}
+              {(liveBidding.callStage === 'GOING_ONCE' || liveBidding.callStage === 'GOING_TWICE') && (
+                <div
+                  className={`p-2.5 border-2 border-black font-black text-xs uppercase flex items-center justify-between animate-pulse ${
+                    liveBidding.callStage === 'GOING_ONCE' ? 'bg-[#FFD600] text-black' : 'bg-[#FF6D00] text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Gavel className="w-4 h-4 flex-shrink-0" />
+                    <span>GAVEL IS FALLING: {liveBidding.callStage.replace('_', ' ')}!</span>
+                  </div>
+                  <span className="underline">RAISE BID NOW</span>
+                </div>
+              )}
+
+              {/* Status relative to my team */}
+              <div
+                className={`p-3 border-2 border-black flex items-center justify-between ${
+                  liveBidding.currentBidderTeamId === myTeam.id
+                    ? 'bg-[#E8F5E9] border-[#00C853]'
+                    : 'bg-[#FFF8E7]'
+                }`}
+              >
+                <div>
+                  <span className="text-[10px] font-black uppercase text-black/70 block">
+                    {liveBidding.currentBidderTeamId === myTeam.id ? 'AUCTION STATUS' : 'CURRENT HIGHEST BIDDER'}
+                  </span>
+                  <div className="font-heading font-black text-sm sm:text-base uppercase text-black truncate max-w-[200px] sm:max-w-xs">
+                    {liveBidding.currentBidderTeamId === myTeam.id
+                      ? '🏆 YOUR FRANCHISE LEADS THE BID!'
+                      : liveBidding.currentBidderTeamName || 'NO BIDS YET'}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-[10px] font-black uppercase text-black/70 block">PRICE</span>
+                  <span className="font-heading font-black text-xl text-black bg-[#FFD600] px-2 py-0.5 border border-black inline-block mt-0.5">
+                    £{liveBidding.currentBid}M
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Increment Bidding Buttons */}
+              <div>
+                <label className="block text-[10px] font-black uppercase text-black/70 mb-1.5">
+                  CLICK TO RAISE BID FOR {myTeam.teamName.toUpperCase()}:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => handleTeamDirectBid(2.5)}
+                    disabled={isBidding || myTeam.remainingBalance < liveBidding.currentBid + 2.5}
+                    className="py-3 bg-[#B6FF3B] hover:bg-black hover:text-white border-2 border-black font-heading font-black text-xs uppercase brutal-shadow-sm cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <span>+£2.5M</span>
+                    <span className="text-[9px] font-mono font-bold opacity-80">
+                      £{(liveBidding.currentBidderTeamId ? liveBidding.currentBid + 2.5 : currentPlayer.basePrice).toFixed(1)}M
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTeamDirectBid(5)}
+                    disabled={isBidding || myTeam.remainingBalance < liveBidding.currentBid + 5}
+                    className="py-3 bg-[#FFD600] hover:bg-black hover:text-white border-2 border-black font-heading font-black text-xs uppercase brutal-shadow-sm cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <span>+£5.0M</span>
+                    <span className="text-[9px] font-mono font-bold opacity-80">
+                      £{(liveBidding.currentBidderTeamId ? liveBidding.currentBid + 5 : currentPlayer.basePrice + 2.5).toFixed(1)}M
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTeamDirectBid(10)}
+                    disabled={isBidding || myTeam.remainingBalance < liveBidding.currentBid + 10}
+                    className="py-3 bg-[#FF5CA8] hover:bg-black hover:text-white border-2 border-black font-heading font-black text-xs uppercase brutal-shadow-sm cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <span>+£10.0M</span>
+                    <span className="text-[9px] font-mono font-bold opacity-80">
+                      £{(liveBidding.currentBidderTeamId ? liveBidding.currentBid + 10 : currentPlayer.basePrice + 7.5).toFixed(1)}M
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Bid Input for Team */}
+              <div className="flex items-center gap-2 pt-1 border-t border-black/10">
+                <div className="relative flex-1">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-black text-xs text-black/60">£</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min={liveBidding.currentBid + 0.5}
+                    max={myTeam.remainingBalance}
+                    value={customBidAmount}
+                    onChange={(e) => setCustomBidAmount(Number(e.target.value))}
+                    placeholder="Custom bid..."
+                    className="w-full pl-6 pr-2.5 py-2 bg-[#FFF8E7] border-2 border-black font-black text-xs"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    if (!customBidAmount || customBidAmount <= liveBidding.currentBid) {
+                      setBidActionError(`Bid must be higher than £${liveBidding.currentBid}M`);
+                      return;
+                    }
+                    if (customBidAmount > myTeam.remainingBalance) {
+                      setBidActionError(`Purse insufficient! You only have £${myTeam.remainingBalance.toFixed(1)}M remaining.`);
+                      return;
+                    }
+                    handlePlaceBid(customBidAmount, myTeam.id);
+                  }}
+                  disabled={isBidding || customBidAmount > myTeam.remainingBalance}
+                  className="px-4 py-2 bg-black text-white hover:bg-[#3D5AFE] font-black text-xs uppercase border-2 border-black cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  SUBMIT BID
                 </button>
               </div>
 
