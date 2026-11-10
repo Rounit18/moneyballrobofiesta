@@ -78,6 +78,9 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
 
+  const lastProcessedSoldIdRef = useRef<string | null>(null);
+  const lastProcessedUnsoldIdRef = useRef<string | null>(null);
+
   const dismissSoldPopup = useCallback(() => {
     setSoldPopup(null);
   }, []);
@@ -150,6 +153,30 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Confetti fallback
     }
   }, []);
+
+  // Synchronize sold popups across all connected clients (Team, Admin, Projector)
+  useEffect(() => {
+    if (state?.recentSoldNotification && state.recentSoldNotification.id !== lastProcessedSoldIdRef.current) {
+      lastProcessedSoldIdRef.current = state.recentSoldNotification.id;
+      const notifTime = new Date(state.recentSoldNotification.timestamp).getTime();
+      const now = Date.now();
+      if (now - notifTime < 30000) {
+        triggerCelebration(state.recentSoldNotification);
+      }
+    }
+  }, [state?.recentSoldNotification, triggerCelebration]);
+
+  // Synchronize unsold popups across all connected clients (Team, Admin, Projector)
+  useEffect(() => {
+    if (state?.recentUnsoldNotification && state.recentUnsoldNotification.id !== lastProcessedUnsoldIdRef.current) {
+      lastProcessedUnsoldIdRef.current = state.recentUnsoldNotification.id;
+      const notifTime = new Date(state.recentUnsoldNotification.timestamp).getTime();
+      const now = Date.now();
+      if (now - notifTime < 30000) {
+        triggerUnsold(state.recentUnsoldNotification);
+      }
+    }
+  }, [state?.recentUnsoldNotification, triggerUnsold]);
 
   // Native WebSocket real-time connection with SSE fallback
   useEffect(() => {
@@ -453,6 +480,10 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (!res.ok) {
         return { success: false, error: data.error || 'Could not sell player' };
       }
+      if (data.notification) {
+        lastProcessedSoldIdRef.current = data.notification.id;
+        triggerCelebration(data.notification);
+      }
       refreshState();
       return { success: true };
     } catch {
@@ -472,6 +503,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return { success: false, error: data.error || 'Could not mark unsold' };
       }
       if (data.notification) {
+        lastProcessedUnsoldIdRef.current = data.notification.id;
         triggerUnsold(data.notification);
       }
       refreshState();

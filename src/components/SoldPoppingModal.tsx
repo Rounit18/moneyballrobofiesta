@@ -30,26 +30,36 @@ export const SoldPoppingModal: React.FC<SoldPoppingModalProps> = ({ notification
   const progressPct = (timeLeft / 4.5) * 100;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 animate-fadeIn">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
       {/* Main Brutalist Card Container */}
       <div className="relative w-full max-w-lg bg-white border-4 border-black brutal-shadow-xl p-6 sm:p-8 flex flex-col items-center text-center">
         {/* Top Dismiss Button */}
         <button
           onClick={onDismiss}
-          className="absolute top-4 right-4 p-1.5 bg-[#FF5CA8] hover:bg-black hover:text-white border-2 border-black text-black font-bold cursor-pointer z-20"
+          className="absolute top-4 right-4 p-1.5 bg-[#FF5CA8] hover:bg-black hover:text-white border-2 border-black text-black font-bold cursor-pointer z-20 transition-colors"
           aria-label="Dismiss"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Stadium Hammer Dropped Sticker */}
-        <div className="bg-[#FF5CA8] text-black border-3 border-black px-4 py-1.5 font-mono text-xs font-black uppercase tracking-widest brutal-shadow-sm mb-4 rotate-[-2deg] flex items-center gap-2">
+        <div className="bg-[#FF5CA8] text-black border-3 border-black px-4 py-1.5 font-mono text-xs font-black uppercase tracking-widest brutal-shadow-sm mb-3 rotate-[-2deg] flex items-center gap-2">
           <Gavel className="w-4 h-4" />
           <span>GAVEL HAS FALLEN · SOLD!</span>
         </div>
 
+        {/* OFFICIAL HAMMER DECLARATION BANNER */}
+        <div className="w-full bg-[#B6FF3B] text-black border-3 border-black py-2.5 px-3 mb-3 brutal-shadow-sm">
+          <div className="text-[10px] font-black uppercase tracking-wider text-black/70">
+            OFFICIAL HAMMER DECLARATION
+          </div>
+          <div className="text-xl sm:text-2xl font-heading font-black uppercase tracking-tight text-black leading-tight mt-0.5">
+            SOLD TO {notification.teamName} AT £{notification.soldPrice.toFixed(1)}M
+          </div>
+        </div>
+
         {/* Player Photo with Black Border & SOLD Stamp */}
-        <div className="relative my-2">
+        <div className="relative my-1">
           <div className="w-36 h-36 sm:w-44 sm:h-44 border-4 border-black bg-[#FFF8E7] brutal-shadow overflow-hidden relative">
             <img
               src={notification.playerPhoto}
@@ -66,7 +76,7 @@ export const SoldPoppingModal: React.FC<SoldPoppingModalProps> = ({ notification
           </div>
 
           {/* Giant Brutalist SOLD Stamp */}
-          <div className="absolute -bottom-3 -right-4 bg-[#FFD600] text-black font-heading font-black text-base px-3 py-1 rotate-[-8deg] border-3 border-black brutal-shadow-sm tracking-wider uppercase">
+          <div className="absolute -bottom-3 -right-4 bg-[#FFD600] text-black font-heading font-black text-base px-3 py-1 rotate-[-8deg] border-3 border-black brutal-shadow-sm tracking-wider uppercase animate-pulse">
             HAMMERED!
           </div>
         </div>
@@ -77,29 +87,29 @@ export const SoldPoppingModal: React.FC<SoldPoppingModalProps> = ({ notification
         </h2>
 
         {/* Winning Team & Price Card */}
-        <div className="w-full bg-[#FFFDF0] border-3 border-black p-4 my-2 flex items-center justify-between font-mono">
+        <div className="w-full bg-[#FFFDF0] border-3 border-black p-3.5 my-1.5 flex items-center justify-between font-mono">
           <div className="text-left flex items-center gap-2.5 min-w-0">
             <div
-              className="w-11 h-11 border-2 border-black flex items-center justify-center p-1 bg-white brutal-shadow-sm flex-shrink-0"
+              className="w-12 h-12 border-2 border-black flex items-center justify-center p-1 bg-white brutal-shadow-sm flex-shrink-0"
             >
               <TeamLogo logo={notification.teamLogo} name={notification.teamName} size="custom" className="w-full h-full" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-black/70 block">
-                SOLD TO FRANCHISE
+              <span className="text-[10px] uppercase font-black text-black/70 block">
+                BUYING FRANCHISE
               </span>
-              <div className="text-lg font-heading text-black uppercase truncate">
+              <div className="text-lg font-heading text-black uppercase truncate font-black">
                 {notification.teamName}
               </div>
             </div>
           </div>
 
           {/* Sold Final Price */}
-          <div className="text-right">
+          <div className="text-right flex-shrink-0">
             <span className="text-[10px] uppercase font-black text-black block">
-              HAMMER RATE
+              FINAL HAMMER PRICE
             </span>
-            <div className="text-2xl sm:text-3xl font-heading text-black bg-[#FFD600] px-2 py-0.5 border-2 border-black mt-0.5">
+            <div className="text-2xl sm:text-3xl font-heading text-black bg-[#FFD600] px-2.5 py-0.5 border-2 border-black mt-0.5 font-black">
               £{notification.soldPrice.toFixed(1)}M
             </div>
           </div>

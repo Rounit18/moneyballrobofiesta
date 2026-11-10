@@ -32,7 +32,7 @@ export const UnsoldPoppingModal: React.FC<UnsoldPoppingModalProps> = ({ notifica
   const progressPct = (timeLeft / 4.5) * 100;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-fadeIn font-mono">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn font-mono">
       {/* Main Brutalist Card Container */}
       <div className="relative w-full max-w-lg bg-white border-4 border-black brutal-shadow-xl p-6 sm:p-8 flex flex-col items-center text-center">
         {/* Top Dismiss Button */}
@@ -45,13 +45,23 @@ export const UnsoldPoppingModal: React.FC<UnsoldPoppingModalProps> = ({ notifica
         </button>
 
         {/* Stadium Unsold Gavel Sticker */}
-        <div className="bg-[#FF1744] text-white border-3 border-black px-4 py-1.5 font-mono text-xs font-black uppercase tracking-widest brutal-shadow-sm mb-4 rotate-[-2deg] flex items-center gap-2">
+        <div className="bg-[#FF1744] text-white border-3 border-black px-4 py-1.5 font-mono text-xs font-black uppercase tracking-widest brutal-shadow-sm mb-3 rotate-[-2deg] flex items-center gap-2">
           <XCircle className="w-4 h-4" />
           <span>LOT PASSED · MARKED UNSOLD</span>
         </div>
 
+        {/* OFFICIAL UNSOLD ADJUDICATION BANNER */}
+        <div className="w-full bg-[#FF1744] text-white border-3 border-black py-2.5 px-3 mb-3 brutal-shadow-sm">
+          <div className="text-[10px] font-black uppercase tracking-wider text-white/90">
+            OFFICIAL ADJUDICATION
+          </div>
+          <div className="text-xl sm:text-2xl font-heading font-black uppercase tracking-tight text-white leading-tight mt-0.5">
+            {notification.playerName} · WENT UNSOLD AT £{notification.basePrice}M
+          </div>
+        </div>
+
         {/* Player Photo with Grayscale Filter & Stamp */}
-        <div className="relative my-2">
+        <div className="relative my-1">
           <div className="w-36 h-36 sm:w-44 sm:h-44 border-4 border-black bg-[#FFF8E7] brutal-shadow overflow-hidden relative">
             <img
               src={notification.playerPhoto}
