@@ -394,61 +394,29 @@ interface CachedAuthUser {
 }
 const authCache = new Map<string, CachedAuthUser>();
 
-async function startServer() {
-  // Sync teams and player cards once at startup
-  syncTeams();
-  syncPlayerCards();
+// Sync teams and player cards once at startup
+syncTeams();
+syncPlayerCards();
 
-  const app = express();
+export const app = express();
 
-  // 1. Enable GZIP compression (reduces JSON & asset payloads by ~75%)
-  app.use(compression({ threshold: 1024, level: 6 }));
-  app.use(express.json({ limit: '2mb' }));
+// 1. Enable GZIP compression (reduces JSON & asset payloads by ~75%)
+app.use(compression({ threshold: 1024, level: 6 }));
+app.use(express.json({ limit: '2mb' }));
 
-  // 2. High-performance static assets caching for images, logos & cards
-  app.use('/images', express.static(path.join(__dirname, 'public/images'), {
-    maxAge: '7d',
-    etag: true,
-    immutable: true,
-  }));
-  app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
-    maxAge: '7d',
-    etag: true,
-    immutable: true,
-  }));
+// 2. High-performance static assets caching for images, logos & cards
+app.use('/images', express.static(path.join(__dirname, 'public/images'), {
+  maxAge: '7d',
+  etag: true,
+  immutable: true,
+}));
+app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
+  maxAge: '7d',
+  etag: true,
+  immutable: true,
+}));
 
-  const server = http.createServer(app);
-
-  // WebSocket Server on /ws
-  const wss = new WebSocketServer({ server, path: '/ws' });
-
-  wss.on('connection', (ws: WebSocket) => {
-    wsClients.add(ws);
-
-    // Send full current state on connection using pre-serialized cache
-    ws.send(JSON.stringify({ type: 'INIT_STATE', payload: auctionState }));
-
-    ws.on('message', (message: string) => {
-      try {
-        const parsed = JSON.parse(message.toString());
-        if (parsed.type === 'PING') {
-          ws.send(JSON.stringify({ type: 'PONG', timestamp: Date.now() }));
-        }
-      } catch {
-        // ignore malformed message
-      }
-    });
-
-    ws.on('close', () => {
-      wsClients.delete(ws);
-    });
-
-    ws.on('error', () => {
-      wsClients.delete(ws);
-    });
-  });
-
-  // SSE Stream endpoint for fallback
+// SSE Stream endpoint for fallback
   app.get('/api/events', (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -1508,14 +1476,48 @@ async function startServer() {
     res.send(csv);
   });
 
-  // Vite development middleware
-  if (process.env.NODE_ENV !== 'production') {
+  // CSV Export endpoint ends here
+
+async function startServer() {
+  const server = http.createServer(app);
+
+  // WebSocket Server on /ws
+  const wss = new WebSocketServer({ server, path: '/ws' });
+
+  wss.on('connection', (ws: WebSocket) => {
+    wsClients.add(ws);
+
+    // Send full current state on connection using pre-serialized cache
+    ws.send(JSON.stringify({ type: 'INIT_STATE', payload: auctionState }));
+
+    ws.on('message', (message: string) => {
+      try {
+        const parsed = JSON.parse(message.toString());
+        if (parsed.type === 'PING') {
+          ws.send(JSON.stringify({ type: 'PONG', timestamp: Date.now() }));
+        }
+      } catch {
+        // ignore malformed message
+      }
+    });
+
+    ws.on('close', () => {
+      wsClients.delete(ws);
+    });
+
+    ws.on('error', () => {
+      wsClients.delete(ws);
+    });
+  });
+
+  // Vite development middleware (local development only)
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (!process.env.VERCEL) {
     app.use(express.static(path.join(__dirname, 'dist')));
     app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
@@ -1529,4 +1531,9 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+// Only launch standalone HTTP server when not running in Vercel Serverless environment
+if (!process.env.VERCEL) {
+  startServer().catch(console.error);
+}
+
+export default app;

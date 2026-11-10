@@ -273,14 +273,20 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        return { success: false, error: 'Server unavailable or backend not reachable. Please check server status.' };
+      }
       if (!res.ok) {
         return { success: false, error: data.error || 'Login failed' };
       }
       setCurrentUser(data.user);
       return { success: true };
-    } catch {
-      return { success: false, error: 'Network error during login' };
+    } catch (err: any) {
+      console.error('Login error:', err);
+      return { success: false, error: err?.message || 'Network error during login' };
     }
   };
 
