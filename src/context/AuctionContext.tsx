@@ -276,7 +276,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
         refreshState();
       }
-    }, 3000);
+    }, 1500);
 
     return () => {
       isUnmounted = true;

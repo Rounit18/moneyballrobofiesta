@@ -80,7 +80,11 @@ export const UserLiveAuctionView: React.FC<UserLiveAuctionViewProps> = ({ isPart
 
     let newBid: number;
     if (!liveBidding.currentBidderTeamId) {
-      newBid = currentPlayer.basePrice;
+      if (increment === 2.5) {
+        newBid = currentPlayer.basePrice;
+      } else {
+        newBid = Number((currentPlayer.basePrice + (increment - 2.5)).toFixed(1));
+      }
     } else {
       newBid = Number((liveBidding.currentBid + increment).toFixed(1));
     }
@@ -502,7 +506,7 @@ export const UserLiveAuctionView: React.FC<UserLiveAuctionViewProps> = ({ isPart
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => handleTeamDirectBid(2.5)}
-                    disabled={isBidding || myTeam.remainingBalance < liveBidding.currentBid + 2.5}
+                    disabled={isBidding || myTeam.remainingBalance < (liveBidding.currentBidderTeamId ? liveBidding.currentBid + 2.5 : currentPlayer.basePrice)}
                     className="py-3 bg-[#B6FF3B] hover:bg-black hover:text-white border-2 border-black font-heading font-black text-xs uppercase brutal-shadow-sm cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
                   >
                     <span>+£2.5M</span>
@@ -513,7 +517,7 @@ export const UserLiveAuctionView: React.FC<UserLiveAuctionViewProps> = ({ isPart
 
                   <button
                     onClick={() => handleTeamDirectBid(5)}
-                    disabled={isBidding || myTeam.remainingBalance < liveBidding.currentBid + 5}
+                    disabled={isBidding || myTeam.remainingBalance < (liveBidding.currentBidderTeamId ? liveBidding.currentBid + 5 : currentPlayer.basePrice + 2.5)}
                     className="py-3 bg-[#FFD600] hover:bg-black hover:text-white border-2 border-black font-heading font-black text-xs uppercase brutal-shadow-sm cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
                   >
                     <span>+£5.0M</span>
@@ -524,7 +528,7 @@ export const UserLiveAuctionView: React.FC<UserLiveAuctionViewProps> = ({ isPart
 
                   <button
                     onClick={() => handleTeamDirectBid(10)}
-                    disabled={isBidding || myTeam.remainingBalance < liveBidding.currentBid + 10}
+                    disabled={isBidding || myTeam.remainingBalance < (liveBidding.currentBidderTeamId ? liveBidding.currentBid + 10 : currentPlayer.basePrice + 7.5)}
                     className="py-3 bg-[#FF5CA8] hover:bg-black hover:text-white border-2 border-black font-heading font-black text-xs uppercase brutal-shadow-sm cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-0.5"
                   >
                     <span>+£10.0M</span>
