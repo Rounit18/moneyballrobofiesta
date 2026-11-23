@@ -361,6 +361,11 @@ async function ensureStateLoaded(forceRefresh = false) {
         const parsed = JSON.parse(data.password);
         if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
           auctionState = parsed;
+          // Always sync set names from code (overrides any stale DB names)
+          auctionState.playerSets = INITIAL_SETS.map(s => ({
+            ...s,
+            status: (auctionState.playerSets?.find((ds: any) => ds.id === s.id)?.status ?? s.status)
+          }));
           cachedStateTimestamp = '';
           cachedStateJson = '';
           stateLoadedFromDb = true;
@@ -380,6 +385,11 @@ async function ensureStateLoaded(forceRefresh = false) {
       const parsed = JSON.parse(fileData);
       if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
         auctionState = parsed;
+        // Always sync set names from code (overrides any stale file names)
+        auctionState.playerSets = INITIAL_SETS.map(s => ({
+          ...s,
+          status: (auctionState.playerSets?.find((ds: any) => ds.id === s.id)?.status ?? s.status)
+        }));
         cachedStateTimestamp = '';
         cachedStateJson = '';
         stateLoadedFromDb = true;
