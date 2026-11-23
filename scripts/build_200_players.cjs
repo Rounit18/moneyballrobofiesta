@@ -3,16 +3,16 @@ const fs = require('fs');
 const md = fs.readFileSync('public/assets/aistudio/Moneyball_200_Player_Auction_Pool_Updated_ffda0f71.md', 'utf-8');
 
 const setNames = [
-  "Set 1 - Marquee Players",
-  "Set 2 - Elite Forwards",
-  "Set 3 - Elite Midfielders",
-  "Set 4 - Elite Defenders",
-  "Set 5 - Goalkeepers",
-  "Set 6 - Premium Forwards",
-  "Set 7 - Premium Midfielders",
-  "Set 8 - Premium Defenders",
-  "Set 9 - Value & Utility",
-  "Set 10 - Bargains & Wildcards"
+  "Marquee Players",
+  "Elite Forwards",
+  "Elite Midfielders",
+  "Elite Defenders",
+  "Goalkeepers",
+  "Premium Forwards",
+  "Premium Midfielders",
+  "Premium Defenders",
+  "Value & Utility",
+  "Bargains & Wildcards"
 ];
 
 const lines = md.split('\n');
@@ -60,7 +60,7 @@ for (let s = 0; s < setNames.length; s++) {
   for (let k = 0; k < playerRows.length; k++) {
     parsed.push({
       setId: setIndex,
-      setName: setName.replace(/^Set \d+ - /, ""),
+      setName,
       ...playerRows[k],
       basePrice: basePriceRows[k]?.basePrice || 20,
       notes: basePriceRows[k]?.notes || ""

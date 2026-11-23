@@ -35,222 +35,222 @@
 
 |**Set No.**|**Set Name**|**Order**|**Player**|
 | :-: | :-: | :-: | :-: |
-|1|Set 1 - Marquee Players|1|Kylian Mbappé|
-|1|Set 1 - Marquee Players|2|Mohamed Salah|
-|1|Set 1 - Marquee Players|3|Erling Haaland|
-|1|Set 1 - Marquee Players|4|Jude Bellingham|
-|1|Set 1 - Marquee Players|5|Ousmane Dembélé|
-|1|Set 1 - Marquee Players|6|Rodri|
-|1|Set 1 - Marquee Players|7|Virgil van Dijk|
-|1|Set 1 - Marquee Players|8|Lamine Yamal|
-|1|Set 1 - Marquee Players|9|Vinícius Jr.|
-|1|Set 1 - Marquee Players|10|Achraf Hakimi|
-|1|Set 1 - Marquee Players|11|Federico Valverde|
-|1|Set 1 - Marquee Players|12|Harry Kane|
-|1|Set 1 - Marquee Players|13|Pedri|
-|1|Set 1 - Marquee Players|14|Vitinha|
-|1|Set 1 - Marquee Players|15|Florian Wirtz|
-|1|Set 1 - Marquee Players|16|Joshua Kimmich|
-|1|Set 1 - Marquee Players|17|Gabriel Magalhães|
-|1|Set 1 - Marquee Players|18|Alessandro Bastoni|
-|1|Set 1 - Marquee Players|19|Jules Koundé|
-|1|Set 1 - Marquee Players|20|William Saliba|
-|2|Set 2 - Elite Forwards|1|Alexander Isak|
-|2|Set 2 - Elite Forwards|2|Bukayo Saka|
-|2|Set 2 - Elite Forwards|3|Lautaro Martínez|
-|2|Set 2 - Elite Forwards|4|Robert Lewandowski|
-|2|Set 2 - Elite Forwards|5|Julián Álvarez|
-|2|Set 2 - Elite Forwards|6|Khvicha Kvaratskhelia|
-|2|Set 2 - Elite Forwards|7|Victor Osimhen|
-|2|Set 2 - Elite Forwards|8|Viktor Gyökeres|
-|2|Set 2 - Elite Forwards|9|Serhou Guirassy|
-|2|Set 2 - Elite Forwards|10|Lionel Messi|
-|2|Set 2 - Elite Forwards|11|Antoine Griezmann|
-|2|Set 2 - Elite Forwards|12|Bryan Mbeumo|
-|2|Set 2 - Elite Forwards|13|Cristiano Ronaldo|
-|2|Set 2 - Elite Forwards|14|Désiré Doué|
-|2|Set 2 - Elite Forwards|15|Heung-min Son|
-|2|Set 2 - Elite Forwards|16|Marcus Thuram|
-|2|Set 2 - Elite Forwards|17|Phil Foden|
-|2|Set 2 - Elite Forwards|18|Rodrygo|
-|2|Set 2 - Elite Forwards|19|Karim Benzema|
-|2|Set 2 - Elite Forwards|20|Rafael Leão|
-|3|Set 3 - Elite Midfielders|1|Raphinha|
-|3|Set 3 - Elite Midfielders|2|Jamal Musiala|
-|3|Set 3 - Elite Midfielders|3|Alexis Mac Allister|
-|3|Set 3 - Elite Midfielders|4|Bruno Fernandes|
-|3|Set 3 - Elite Midfielders|5|Cole Palmer|
+|1|Marquee Players|1|Kylian Mbappé|
+|1|Marquee Players|2|Mohamed Salah|
+|1|Marquee Players|3|Erling Haaland|
+|1|Marquee Players|4|Jude Bellingham|
+|1|Marquee Players|5|Ousmane Dembélé|
+|1|Marquee Players|6|Rodri|
+|1|Marquee Players|7|Virgil van Dijk|
+|1|Marquee Players|8|Lamine Yamal|
+|1|Marquee Players|9|Vinícius Jr.|
+|1|Marquee Players|10|Achraf Hakimi|
+|1|Marquee Players|11|Federico Valverde|
+|1|Marquee Players|12|Harry Kane|
+|1|Marquee Players|13|Pedri|
+|1|Marquee Players|14|Vitinha|
+|1|Marquee Players|15|Florian Wirtz|
+|1|Marquee Players|16|Joshua Kimmich|
+|1|Marquee Players|17|Gabriel Magalhães|
+|1|Marquee Players|18|Alessandro Bastoni|
+|1|Marquee Players|19|Jules Koundé|
+|1|Marquee Players|20|William Saliba|
+|2|Elite Forwards|1|Alexander Isak|
+|2|Elite Forwards|2|Bukayo Saka|
+|2|Elite Forwards|3|Lautaro Martínez|
+|2|Elite Forwards|4|Robert Lewandowski|
+|2|Elite Forwards|5|Julián Álvarez|
+|2|Elite Forwards|6|Khvicha Kvaratskhelia|
+|2|Elite Forwards|7|Victor Osimhen|
+|2|Elite Forwards|8|Viktor Gyökeres|
+|2|Elite Forwards|9|Serhou Guirassy|
+|2|Elite Forwards|10|Lionel Messi|
+|2|Elite Forwards|11|Antoine Griezmann|
+|2|Elite Forwards|12|Bryan Mbeumo|
+|2|Elite Forwards|13|Cristiano Ronaldo|
+|2|Elite Forwards|14|Désiré Doué|
+|2|Elite Forwards|15|Heung-min Son|
+|2|Elite Forwards|16|Marcus Thuram|
+|2|Elite Forwards|17|Phil Foden|
+|2|Elite Forwards|18|Rodrygo|
+|2|Elite Forwards|19|Karim Benzema|
+|2|Elite Forwards|20|Rafael Leão|
+|3|Elite Midfielders|1|Raphinha|
+|3|Elite Midfielders|2|Jamal Musiala|
+|3|Elite Midfielders|3|Alexis Mac Allister|
+|3|Elite Midfielders|4|Bruno Fernandes|
+|3|Elite Midfielders|5|Cole Palmer|
 
 
 
-|3|Set 3 - Elite Midfielders|6|Declan Rice|
+|3|Elite Midfielders|6|Declan Rice|
 | -: | - | -: | - |
-|3|Set 3 - Elite Midfielders|7|Frenkie de Jong|
-|3|Set 3 - Elite Midfielders|8|Kevin De Bruyne|
-|3|Set 3 - Elite Midfielders|9|Martin Ødegaard|
-|3|Set 3 - Elite Midfielders|10|Moisés Caicedo|
-|3|Set 3 - Elite Midfielders|11|Nicolò Barella|
-|3|Set 3 - Elite Midfielders|12|Bruno Guimarães|
-|3|Set 3 - Elite Midfielders|13|Hakan Çalhanoğlu|
-|3|Set 3 - Elite Midfielders|14|Michael Olise|
-|3|Set 3 - Elite Midfielders|15|Nico Williams|
-|3|Set 3 - Elite Midfielders|16|Paulo Dybala|
-|3|Set 3 - Elite Midfielders|17|Sandro Tonali|
-|3|Set 3 - Elite Midfielders|18|Tijjani Reijnders|
-|3|Set 3 - Elite Midfielders|19|João Neves|
-|3|Set 3 - Elite Midfielders|20|N'Golo Kanté|
-|4|Set 4 - Elite Defenders|1|Marquinhos|
-|4|Set 4 - Elite Defenders|2|Jonathan Tah|
-|4|Set 4 - Elite Defenders|3|Nuno Mendes|
-|4|Set 4 - Elite Defenders|4|Antonio Rüdiger|
-|4|Set 4 - Elite Defenders|5|Ibrahima Konaté|
-|4|Set 4 - Elite Defenders|6|Rúben Dias|
-|4|Set 4 - Elite Defenders|7|Trent Alexander-Arnold|
-|4|Set 4 - Elite Defenders|8|Willian Pacho|
-|4|Set 4 - Elite Defenders|9|Bremer|
-|4|Set 4 - Elite Defenders|10|Dani Carvajal|
-|4|Set 4 - Elite Defenders|11|Dayot Upamecano|
-|4|Set 4 - Elite Defenders|12|Federico Dimarco|
-|4|Set 4 - Elite Defenders|13|Nico Schlotterbeck|
-|4|Set 4 - Elite Defenders|14|Iñigo Martínez|
-|4|Set 4 - Elite Defenders|15|Alphonso Davies|
-|4|Set 4 - Elite Defenders|16|João Cancelo|
-|4|Set 4 - Elite Defenders|17|Joško Gvardiol|
-|4|Set 4 - Elite Defenders|18|Theo Hernández|
-|4|Set 4 - Elite Defenders|19|Éder Militão|
-|4|Set 4 - Elite Defenders|20|Denzel Dumfries|
-|5|Set 5 - Goalkeepers|1|Alisson|
-|5|Set 5 - Goalkeepers|2|Gianluigi Donnarumma|
-|5|Set 5 - Goalkeepers|3|Thibaut Courtois|
-|5|Set 5 - Goalkeepers|4|Jan Oblak|
-|5|Set 5 - Goalkeepers|5|David Raya|
-|5|Set 5 - Goalkeepers|6|Mike Maignan|
-|5|Set 5 - Goalkeepers|7|Yann Sommer|
-|5|Set 5 - Goalkeepers|8|Gregor Kobel|
-|5|Set 5 - Goalkeepers|9|Marc-André ter Stegen|
-|5|Set 5 - Goalkeepers|10|David de Gea|
-|5|Set 5 - Goalkeepers|11|Ederson|
-|5|Set 5 - Goalkeepers|12|Emiliano Martínez|
-|5|Set 5 - Goalkeepers|13|Unai Simón|
+|3|Elite Midfielders|7|Frenkie de Jong|
+|3|Elite Midfielders|8|Kevin De Bruyne|
+|3|Elite Midfielders|9|Martin Ødegaard|
+|3|Elite Midfielders|10|Moisés Caicedo|
+|3|Elite Midfielders|11|Nicolò Barella|
+|3|Elite Midfielders|12|Bruno Guimarães|
+|3|Elite Midfielders|13|Hakan Çalhanoğlu|
+|3|Elite Midfielders|14|Michael Olise|
+|3|Elite Midfielders|15|Nico Williams|
+|3|Elite Midfielders|16|Paulo Dybala|
+|3|Elite Midfielders|17|Sandro Tonali|
+|3|Elite Midfielders|18|Tijjani Reijnders|
+|3|Elite Midfielders|19|João Neves|
+|3|Elite Midfielders|20|N'Golo Kanté|
+|4|Elite Defenders|1|Marquinhos|
+|4|Elite Defenders|2|Jonathan Tah|
+|4|Elite Defenders|3|Nuno Mendes|
+|4|Elite Defenders|4|Antonio Rüdiger|
+|4|Elite Defenders|5|Ibrahima Konaté|
+|4|Elite Defenders|6|Rúben Dias|
+|4|Elite Defenders|7|Trent Alexander-Arnold|
+|4|Elite Defenders|8|Willian Pacho|
+|4|Elite Defenders|9|Bremer|
+|4|Elite Defenders|10|Dani Carvajal|
+|4|Elite Defenders|11|Dayot Upamecano|
+|4|Elite Defenders|12|Federico Dimarco|
+|4|Elite Defenders|13|Nico Schlotterbeck|
+|4|Elite Defenders|14|Iñigo Martínez|
+|4|Elite Defenders|15|Alphonso Davies|
+|4|Elite Defenders|16|João Cancelo|
+|4|Elite Defenders|17|Joško Gvardiol|
+|4|Elite Defenders|18|Theo Hernández|
+|4|Elite Defenders|19|Éder Militão|
+|4|Elite Defenders|20|Denzel Dumfries|
+|5|Goalkeepers|1|Alisson|
+|5|Goalkeepers|2|Gianluigi Donnarumma|
+|5|Goalkeepers|3|Thibaut Courtois|
+|5|Goalkeepers|4|Jan Oblak|
+|5|Goalkeepers|5|David Raya|
+|5|Goalkeepers|6|Mike Maignan|
+|5|Goalkeepers|7|Yann Sommer|
+|5|Goalkeepers|8|Gregor Kobel|
+|5|Goalkeepers|9|Marc-André ter Stegen|
+|5|Goalkeepers|10|David de Gea|
+|5|Goalkeepers|11|Ederson|
+|5|Goalkeepers|12|Emiliano Martínez|
+|5|Goalkeepers|13|Unai Simón|
 
 
 
-|5|Set 5 - Goalkeepers|14|Péter Gulácsi|
+|5|Goalkeepers|14|Péter Gulácsi|
 | -: | - | -: | - |
-|5|Set 5 - Goalkeepers|15|Diogo Costa|
-|5|Set 5 - Goalkeepers|16|Giorgi Mamardashvili|
-|5|Set 5 - Goalkeepers|17|Jordan Pickford|
-|5|Set 5 - Goalkeepers|18|Manuel Neuer|
-|5|Set 5 - Goalkeepers|19|Wojciech Szczęsny|
-|5|Set 5 - Goalkeepers|20|Lucas Chevalier|
-|6|Set 6 - Premium Forwards|1|Hugo Ekitiké|
-|6|Set 6 - Premium Forwards|2|Patrik Schick|
-|6|Set 6 - Premium Forwards|3|Bradley Barcola|
-|6|Set 6 - Premium Forwards|4|Christian Pulisic|
-|6|Set 6 - Premium Forwards|5|Omar Marmoush|
-|6|Set 6 - Premium Forwards|6|Ademola Lookman|
-|6|Set 6 - Premium Forwards|7|Alexander Sørloth|
-|6|Set 6 - Premium Forwards|8|Ollie Watkins|
-|6|Set 6 - Premium Forwards|9|Ferran Torres|
-|6|Set 6 - Premium Forwards|10|Leandro Trossard|
-|6|Set 6 - Premium Forwards|11|Iago Aspas|
-|6|Set 6 - Premium Forwards|12|Loïs Openda|
-|6|Set 6 - Premium Forwards|13|Marcus Rashford|
-|6|Set 6 - Premium Forwards|14|Mikel Oyarzabal|
-|6|Set 6 - Premium Forwards|15|Dušan Vlahović|
-|6|Set 6 - Premium Forwards|16|Jean-Philippe Mateta|
-|6|Set 6 - Premium Forwards|17|Gabriel Martinelli|
-|6|Set 6 - Premium Forwards|18|David Neres|
-|6|Set 6 - Premium Forwards|19|Igor Thiago|
-|6|Set 6 - Premium Forwards|20|Jonathan David|
-|7|Set 7 - Premium Midfielders|1|Dani Olmo|
-|7|Set 7 - Premium Midfielders|2|Alejandro Grimaldo|
-|7|Set 7 - Premium Midfielders|3|Luis Díaz|
-|7|Set 7 - Premium Midfielders|4|Ryan Gravenberch|
-|7|Set 7 - Premium Midfielders|5|Scott McTominay|
-|7|Set 7 - Premium Midfielders|6|Fabián Ruiz|
-|7|Set 7 - Premium Midfielders|7|Youri Tielemans|
-|7|Set 7 - Premium Midfielders|8|Granit Xhaka|
-|7|Set 7 - Premium Midfielders|9|Cody Gakpo|
-|7|Set 7 - Premium Midfielders|10|Enzo Fernández|
-|7|Set 7 - Premium Midfielders|11|Xavi Simons|
-|7|Set 7 - Premium Midfielders|12|Bernardo Silva|
-|7|Set 7 - Premium Midfielders|13|James Maddison|
-|7|Set 7 - Premium Midfielders|14|Riyad Mahrez|
-|7|Set 7 - Premium Midfielders|15|Rúben Neves|
-|7|Set 7 - Premium Midfielders|16|Álex Baena|
-|7|Set 7 - Premium Midfielders|17|Isco|
-|7|Set 7 - Premium Midfielders|18|Rodrigo De Paul|
-|7|Set 7 - Premium Midfielders|19|Sergej Milinković-Savić|
-|7|Set 7 - Premium Midfielders|20|Dominik Szoboszlai|
+|5|Goalkeepers|15|Diogo Costa|
+|5|Goalkeepers|16|Giorgi Mamardashvili|
+|5|Goalkeepers|17|Jordan Pickford|
+|5|Goalkeepers|18|Manuel Neuer|
+|5|Goalkeepers|19|Wojciech Szczęsny|
+|5|Goalkeepers|20|Lucas Chevalier|
+|6|Premium Forwards|1|Hugo Ekitiké|
+|6|Premium Forwards|2|Patrik Schick|
+|6|Premium Forwards|3|Bradley Barcola|
+|6|Premium Forwards|4|Christian Pulisic|
+|6|Premium Forwards|5|Omar Marmoush|
+|6|Premium Forwards|6|Ademola Lookman|
+|6|Premium Forwards|7|Alexander Sørloth|
+|6|Premium Forwards|8|Ollie Watkins|
+|6|Premium Forwards|9|Ferran Torres|
+|6|Premium Forwards|10|Leandro Trossard|
+|6|Premium Forwards|11|Iago Aspas|
+|6|Premium Forwards|12|Loïs Openda|
+|6|Premium Forwards|13|Marcus Rashford|
+|6|Premium Forwards|14|Mikel Oyarzabal|
+|6|Premium Forwards|15|Dušan Vlahović|
+|6|Premium Forwards|16|Jean-Philippe Mateta|
+|6|Premium Forwards|17|Gabriel Martinelli|
+|6|Premium Forwards|18|David Neres|
+|6|Premium Forwards|19|Igor Thiago|
+|6|Premium Forwards|20|Jonathan David|
+|7|Premium Midfielders|1|Dani Olmo|
+|7|Premium Midfielders|2|Alejandro Grimaldo|
+|7|Premium Midfielders|3|Luis Díaz|
+|7|Premium Midfielders|4|Ryan Gravenberch|
+|7|Premium Midfielders|5|Scott McTominay|
+|7|Premium Midfielders|6|Fabián Ruiz|
+|7|Premium Midfielders|7|Youri Tielemans|
+|7|Premium Midfielders|8|Granit Xhaka|
+|7|Premium Midfielders|9|Cody Gakpo|
+|7|Premium Midfielders|10|Enzo Fernández|
+|7|Premium Midfielders|11|Xavi Simons|
+|7|Premium Midfielders|12|Bernardo Silva|
+|7|Premium Midfielders|13|James Maddison|
+|7|Premium Midfielders|14|Riyad Mahrez|
+|7|Premium Midfielders|15|Rúben Neves|
+|7|Premium Midfielders|16|Álex Baena|
+|7|Premium Midfielders|17|Isco|
+|7|Premium Midfielders|18|Rodrigo De Paul|
+|7|Premium Midfielders|19|Sergej Milinković-Savić|
+|7|Premium Midfielders|20|Dominik Szoboszlai|
 
 
 
-|8|Set 8 - Premium Defenders|1|Marcos Llorente|
+|8|Premium Defenders|1|Marcos Llorente|
 | -: | - | -: | - |
-|8|Set 8 - Premium Defenders|2|Benjamin Pavard|
-|8|Set 8 - Premium Defenders|3|Marc Cucurella|
-|8|Set 8 - Premium Defenders|4|Jeremie Frimpong|
-|8|Set 8 - Premium Defenders|5|Alejandro Balde|
-|8|Set 8 - Premium Defenders|6|Piero Hincapié|
-|8|Set 8 - Premium Defenders|7|Ronald Araújo|
-|8|Set 8 - Premium Defenders|8|Ben White|
-|8|Set 8 - Premium Defenders|9|Giovanni Di Lorenzo|
-|8|Set 8 - Premium Defenders|10|Nathan Aké|
-|8|Set 8 - Premium Defenders|11|Nikola Milenković|
-|8|Set 8 - Premium Defenders|12|Jurriën Timber|
-|8|Set 8 - Premium Defenders|13|Miloš Kerkez|
-|8|Set 8 - Premium Defenders|14|Pedro Porro|
-|8|Set 8 - Premium Defenders|15|Andrew Robertson|
-|8|Set 8 - Premium Defenders|16|Cristian Romero|
-|8|Set 8 - Premium Defenders|17|John Stones|
-|8|Set 8 - Premium Defenders|18|Marc Guéhi|
-|8|Set 8 - Premium Defenders|19|Matthijs de Ligt|
-|8|Set 8 - Premium Defenders|20|Pau Cubarsí|
-|9|Set 9 - Value & Utility|1|Moussa Diaby|
-|9|Set 9 - Value & Utility|2|Gavi|
-|9|Set 9 - Value & Utility|3|Luka Modrić|
-|9|Set 9 - Value & Utility|4|Antonee Robinson|
-|9|Set 9 - Value & Utility|5|Kai Havertz|
-|9|Set 9 - Value & Utility|6|Kaoru Mitoma|
-|9|Set 9 - Value & Utility|7|Micky van de Ven|
-|9|Set 9 - Value & Utility|8|Takefusa Kubo|
-|9|Set 9 - Value & Utility|9|Ezri Konsa|
-|9|Set 9 - Value & Utility|10|Rayan Aït-Nouri|
-|9|Set 9 - Value & Utility|11|Rayan Cherki|
-|9|Set 9 - Value & Utility|12|Reece James|
-|9|Set 9 - Value & Utility|13|Jérémy Doku|
-|9|Set 9 - Value & Utility|14|Jack Grealish|
-|9|Set 9 - Value & Utility|15|Noa Lang|
-|9|Set 9 - Value & Utility|16|Pedro Neto|
-|9|Set 9 - Value & Utility|17|Levi Colwill|
-|9|Set 9 - Value & Utility|18|Darwin Núñez|
-|9|Set 9 - Value & Utility|19|Diogo Dalot|
-|9|Set 9 - Value & Utility|20|Lukáš Haraslín|
-|10|Set 10 - Bargains & Wildcards|1|Eduardo Camavinga|
-|10|Set 10 - Bargains & Wildcards|2|Anthony Gordon|
-|10|Set 10 - Bargains & Wildcards|3|Eberechi Eze|
-|10|Set 10 - Bargains & Wildcards|4|Mikel Merino|
-|10|Set 10 - Bargains & Wildcards|5|David Raum|
+|8|Premium Defenders|2|Benjamin Pavard|
+|8|Premium Defenders|3|Marc Cucurella|
+|8|Premium Defenders|4|Jeremie Frimpong|
+|8|Premium Defenders|5|Alejandro Balde|
+|8|Premium Defenders|6|Piero Hincapié|
+|8|Premium Defenders|7|Ronald Araújo|
+|8|Premium Defenders|8|Ben White|
+|8|Premium Defenders|9|Giovanni Di Lorenzo|
+|8|Premium Defenders|10|Nathan Aké|
+|8|Premium Defenders|11|Nikola Milenković|
+|8|Premium Defenders|12|Jurriën Timber|
+|8|Premium Defenders|13|Miloš Kerkez|
+|8|Premium Defenders|14|Pedro Porro|
+|8|Premium Defenders|15|Andrew Robertson|
+|8|Premium Defenders|16|Cristian Romero|
+|8|Premium Defenders|17|John Stones|
+|8|Premium Defenders|18|Marc Guéhi|
+|8|Premium Defenders|19|Matthijs de Ligt|
+|8|Premium Defenders|20|Pau Cubarsí|
+|9|Value & Utility|1|Moussa Diaby|
+|9|Value & Utility|2|Gavi|
+|9|Value & Utility|3|Luka Modrić|
+|9|Value & Utility|4|Antonee Robinson|
+|9|Value & Utility|5|Kai Havertz|
+|9|Value & Utility|6|Kaoru Mitoma|
+|9|Value & Utility|7|Micky van de Ven|
+|9|Value & Utility|8|Takefusa Kubo|
+|9|Value & Utility|9|Ezri Konsa|
+|9|Value & Utility|10|Rayan Aït-Nouri|
+|9|Value & Utility|11|Rayan Cherki|
+|9|Value & Utility|12|Reece James|
+|9|Value & Utility|13|Jérémy Doku|
+|9|Value & Utility|14|Jack Grealish|
+|9|Value & Utility|15|Noa Lang|
+|9|Value & Utility|16|Pedro Neto|
+|9|Value & Utility|17|Levi Colwill|
+|9|Value & Utility|18|Darwin Núñez|
+|9|Value & Utility|19|Diogo Dalot|
+|9|Value & Utility|20|Lukáš Haraslín|
+|10|Bargains & Wildcards|1|Eduardo Camavinga|
+|10|Bargains & Wildcards|2|Anthony Gordon|
+|10|Bargains & Wildcards|3|Eberechi Eze|
+|10|Bargains & Wildcards|4|Mikel Merino|
+|10|Bargains & Wildcards|5|David Raum|
 
 
 
-|10|Set 10 - Bargains & Wildcards|6|Kim Min-jae|
+|10|Bargains & Wildcards|6|Kim Min-jae|
 | -: | - | -: | - |
-|10|Set 10 - Bargains & Wildcards|7|Maximilian Mittelstädt|
-|10|Set 10 - Bargains & Wildcards|8|Savinho|
-|10|Set 10 - Bargains & Wildcards|9|Domenico Berardi|
-|10|Set 10 - Bargains & Wildcards|10|Ferland Mendy|
-|10|Set 10 - Bargains & Wildcards|11|Jacob Murphy|
-|10|Set 10 - Bargains & Wildcards|12|Lisandro Martínez|
-|10|Set 10 - Bargains & Wildcards|13|Matteo Politano|
-|10|Set 10 - Bargains & Wildcards|14|Ivan Perišić|
-|10|Set 10 - Bargains & Wildcards|15|Benjamin Šeško|
-|10|Set 10 - Bargains & Wildcards|16|Destiny Udogie|
-|10|Set 10 - Bargains & Wildcards|17|Lucas Paquetá|
-|10|Set 10 - Bargains & Wildcards|18|Noni Madueke|
-|10|Set 10 - Bargains & Wildcards|19|Ola Aina|
-|10|Set 10 - Bargains & Wildcards|20|Warren Zaïre-Emery|
+|10|Bargains & Wildcards|7|Maximilian Mittelstädt|
+|10|Bargains & Wildcards|8|Savinho|
+|10|Bargains & Wildcards|9|Domenico Berardi|
+|10|Bargains & Wildcards|10|Ferland Mendy|
+|10|Bargains & Wildcards|11|Jacob Murphy|
+|10|Bargains & Wildcards|12|Lisandro Martínez|
+|10|Bargains & Wildcards|13|Matteo Politano|
+|10|Bargains & Wildcards|14|Ivan Perišić|
+|10|Bargains & Wildcards|15|Benjamin Šeško|
+|10|Bargains & Wildcards|16|Destiny Udogie|
+|10|Bargains & Wildcards|17|Lucas Paquetá|
+|10|Bargains & Wildcards|18|Noni Madueke|
+|10|Bargains & Wildcards|19|Ola Aina|
+|10|Bargains & Wildcards|20|Warren Zaïre-Emery|
 
 
 
@@ -691,7 +691,7 @@
 ||
 ||
 
-|**Set 1 - Marquee Players**||||||
+|**Marquee Players**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -743,7 +743,7 @@
 |40||
 |40||
 
-|**Set 2 - Elite Forwards**||||||
+|**Elite Forwards**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -795,7 +795,7 @@
 |25||
 |25||
 
-|**Set 3 - Elite Midfielders**||||||
+|**Elite Midfielders**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -848,7 +848,7 @@
 |20|Approved replacement — base price suggested, can be adjusted.; Normalized set placement|
 
 
-|**Set 4 - Elite Defenders**||||||
+|**Elite Defenders**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -900,7 +900,7 @@
 |25||
 |20||
 
-|**Set 5 - Goalkeepers**||||||
+|**Goalkeepers**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -952,7 +952,7 @@
 |10||
 |10||
 
-|**Set 6 - Premium Forwards**||||||
+|**Premium Forwards**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -1004,7 +1004,7 @@
 |18||
 |18||
 
-|**Set 7 - Premium Midfielders**||||||
+|**Premium Midfielders**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -1056,7 +1056,7 @@
 |18||
 |20||
 
-|**Set 8 - Premium Defenders**||||||
+|**Premium Defenders**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -1108,7 +1108,7 @@
 |18||
 |18||
 
-|**Set 9 - Value & Utility**||||||
+|**Value & Utility**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
@@ -1160,7 +1160,7 @@
 |10||
 |10||
 
-|**Set 10 - Bargains & Wildcards**||||||
+|**Bargains & Wildcards**||||||
 | :-: | :- | :- | :- | :- | :- |
 |||||||
 |**#**|**Player**|**Primary Position**|**OVR**|**Category**||
