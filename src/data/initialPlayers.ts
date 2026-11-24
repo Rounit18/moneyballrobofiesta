@@ -3431,7 +3431,7 @@ export const INITIAL_PLAYERS: Player[] = [
   {
     "id": "p-138",
     "name": "Rodrigo De Paul",
-    "photo": "/images/rodrigo-de-paul_card.png",
+    "photo": "/images/rodrigo-de-paul_card.webp",
     "currentClub": "Elite Club",
     "position": "CM",
     "positionCategory": "MIDFIELDER",
@@ -4906,7 +4906,7 @@ export const INITIAL_PLAYERS: Player[] = [
   {
     "id": "p-197",
     "name": "Lucas Paquetá",
-    "photo": "/images/lucas_paqueta_card.png",
+    "photo": "/images/lucas_paqueta_card.webp",
     "currentClub": "Elite Club",
     "position": "CM",
     "positionCategory": "MIDFIELDER",
