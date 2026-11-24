@@ -1320,7 +1320,13 @@ app.get('/api/state', async (req: Request, res: Response) => {
 
     broadcast('player_unsold', { player, notification: notif });
     await broadcastStateUpdate();
-    res.json({ success: true, player, notification: notif });
+    res.json({
+      success: true,
+      player,
+      notification: notif,
+      currentPlayerId: auctionState.currentPlayerId,
+      state: auctionState,
+    });
   });
 
   // ADMIN: Edit Sale / Admin Correction
