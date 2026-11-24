@@ -321,15 +321,13 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     connectSse();
     connectWs();
 
-    // Adaptive sync fallback: only polls if WebSocket is disconnected!
+    // Keep a lightweight ETag check active on every portal. A few serverless and
+    // reverse-proxy deployments can accept realtime connections but drop broadcasts;
+    // unchanged state returns 304 with no payload, while transfer changes arrive
+    // within one interval without requiring a page refresh.
     const syncInterval = window.setInterval(() => {
       if (!eventSource) connectSse();
-      if (
-        (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) &&
-        !eventSource
-      ) {
-        refreshState();
-      }
+      void refreshState();
     }, 1500);
 
     return () => {
