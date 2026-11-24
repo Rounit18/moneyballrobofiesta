@@ -82,6 +82,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const lastProcessedUnsoldIdRef = useRef<string | null>(null);
   const lastRealtimeBidKeyRef = useRef<string | null>(null);
   const lastRealtimeCallStageKeyRef = useRef<string | null>(null);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
 
   const dismissSoldPopup = useCallback(() => {
     setSoldPopup(null);
@@ -100,29 +101,42 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Fetch current state via REST with HTTP 304 ETag validation (0 bytes if unchanged)
   const refreshState = useCallback(async () => {
-    try {
-      const headers: Record<string, string> = {};
-      if (lastStateVersionRef.current) {
-        headers['If-None-Match'] = `"${lastStateVersionRef.current}"`;
-      }
-      const res = await fetch('/api/state', { headers });
-      if (res.status === 304) {
-        // State unchanged — 0ms parsing, 0 re-renders, 0 lag
-        return;
-      }
-      if (res.ok) {
-        const data = await res.json();
-        if (data.lastUpdated && data.lastUpdated === lastStateVersionRef.current) {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
+
+    const request = (async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (lastStateVersionRef.current) {
+          headers['If-None-Match'] = `"${lastStateVersionRef.current}"`;
+        }
+        const res = await fetch('/api/state', { headers });
+        if (res.status === 304) {
+          // State unchanged — 0ms parsing, 0 re-renders, 0 lag
           return;
         }
-        lastStateVersionRef.current = data.lastUpdated || '';
-        setState(data);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.lastUpdated && data.lastUpdated === lastStateVersionRef.current) {
+            return;
+          }
+          lastStateVersionRef.current = data.lastUpdated || '';
+          setState(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch state:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to fetch state:', err);
-    } finally {
-      setLoading(false);
-    }
+    })();
+
+    let trackedRequest: Promise<void>;
+    trackedRequest = request.finally(() => {
+      if (refreshInFlightRef.current === trackedRequest) {
+        refreshInFlightRef.current = null;
+      }
+    });
+    refreshInFlightRef.current = trackedRequest;
+    return trackedRequest;
   }, []);
 
   // Trigger celebration explosion
