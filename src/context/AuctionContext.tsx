@@ -220,6 +220,10 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             lastProcessedUnsoldIdRef.current = notification.id;
             triggerUnsold(notification);
           }
+        } else if (type === 'TRANSFER_OFFER_UPDATED' || type === 'TRANSFER_CONFIRMED') {
+          // Transfer events are emitted before the full state broadcast. Fetching here
+          // keeps every portal current even when a state-update frame is missed.
+          void refreshState();
         }
       } catch (err) {
         console.error('Error handling realtime event:', err);
@@ -238,6 +242,8 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         source.addEventListener('CALL_STAGE_UPDATE', forward('CALL_STAGE_UPDATE'));
         source.addEventListener('player_sold', forward('player_sold'));
         source.addEventListener('player_unsold', forward('player_unsold'));
+        source.addEventListener('TRANSFER_OFFER_UPDATED', forward('TRANSFER_OFFER_UPDATED'));
+        source.addEventListener('TRANSFER_CONFIRMED', forward('TRANSFER_CONFIRMED'));
         source.onerror = () => {
           source.close();
           if (eventSource === source) eventSource = null;
