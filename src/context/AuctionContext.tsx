@@ -632,14 +632,16 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const counterTransferOffer = async (offerId: string, amount: number) => {
-    if (!currentUser?.teamId) {
+    const offer = state?.transferOffers.find((item) => item.id === offerId);
+    const sellerTeamId = currentUser?.role === 'admin' ? offer?.sellerTeamId : currentUser?.teamId;
+    if (!sellerTeamId) {
       return { success: false, error: 'Must be logged in as a team' };
     }
     try {
       const res = await fetch('/api/transfer/counter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId, sellerTeamId: currentUser.teamId, amount }),
+        body: JSON.stringify({ offerId, sellerTeamId, amount }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -673,7 +675,11 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const rejectTransferOffer = async (offerId: string) => {
-    const teamId = currentUser?.teamId || 'admin';
+    const offer = state?.transferOffers.find((item) => item.id === offerId);
+    const teamId = currentUser?.role === 'admin' ? offer?.sellerTeamId || 'admin' : currentUser?.teamId;
+    if (!teamId) {
+      return { success: false, error: 'Must be logged in as a team' };
+    }
     try {
       const res = await fetch('/api/transfer/reject', {
         method: 'POST',

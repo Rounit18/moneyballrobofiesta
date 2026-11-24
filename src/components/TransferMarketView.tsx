@@ -52,6 +52,7 @@ export const TransferMarketView: React.FC = () => {
   // Counter offer modal state
   const [selectedOfferForCounter, setSelectedOfferForCounter] = useState<TransferOffer | null>(null);
   const [counterAmount, setCounterAmount] = useState<number>(35);
+  const [offerActionError, setOfferActionError] = useState<string | null>(null);
 
   // Confirm Deal Modal state
   const [confirmDealOffer, setConfirmDealOffer] = useState<TransferOffer | null>(null);
@@ -139,12 +140,26 @@ export const TransferMarketView: React.FC = () => {
   const handleOpenCounterModal = (offer: TransferOffer) => {
     setSelectedOfferForCounter(offer);
     setCounterAmount(offer.currentAmount + 5);
+    setOfferActionError(null);
   };
 
   const handleSubmitCounter = async () => {
     if (!selectedOfferForCounter) return;
-    await counterTransferOffer(selectedOfferForCounter.id, counterAmount);
-    setSelectedOfferForCounter(null);
+    setOfferActionError(null);
+    const res = await counterTransferOffer(selectedOfferForCounter.id, counterAmount);
+    if (res.success) {
+      setSelectedOfferForCounter(null);
+    } else {
+      setOfferActionError(res.error || 'Counter offer failed');
+    }
+  };
+
+  const handleRejectOffer = async (offerId: string) => {
+    setOfferActionError(null);
+    const res = await rejectTransferOffer(offerId);
+    if (!res.success) {
+      setOfferActionError(res.error || 'Reject transfer failed');
+    }
   };
 
   const handleConfirmDeal = async () => {
@@ -374,6 +389,11 @@ export const TransferMarketView: React.FC = () => {
       {/* TAB 2: SELLER OFFER INBOX (PRD Section 31) */}
       {activeTab === 'inbox' && (
         <div className="space-y-4">
+          {offerActionError && (
+            <div className="bg-red-100 border-4 border-red-600 text-red-700 p-3 font-mono font-bold text-xs">
+              {offerActionError}
+            </div>
+          )}
           <div className="bg-white border-4 border-black brutal-shadow p-5 font-mono">
             <h2 className="text-xl font-heading font-black uppercase text-black mb-1">
               INCOMING TRANSFER OFFERS
@@ -463,7 +483,7 @@ export const TransferMarketView: React.FC = () => {
                           </button>
 
                           <button
-                            onClick={() => rejectTransferOffer(offer.id)}
+                            onClick={() => handleRejectOffer(offer.id)}
                             className="flex-1 sm:flex-none px-2.5 py-2 bg-[#FF1744] hover:bg-black text-white font-mono font-black text-xs uppercase border-2 border-black brutal-shadow-sm cursor-pointer"
                           >
                             REJECT
@@ -673,6 +693,11 @@ export const TransferMarketView: React.FC = () => {
             </div>
 
             <div className="space-y-4">
+              {offerActionError && (
+                <div className="bg-red-100 border-2 border-red-600 text-red-700 p-2 font-bold text-xs">
+                  {offerActionError}
+                </div>
+              )}
               <div className="bg-[#FFF8E7] border-2 border-black p-3 text-xs">
                 <div className="flex justify-between text-black/70 font-bold">
                   <span>YOUR AVAILABLE PURSE:</span>
