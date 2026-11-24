@@ -80,6 +80,8 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const lastProcessedSoldIdRef = useRef<string | null>(null);
   const lastProcessedUnsoldIdRef = useRef<string | null>(null);
+  const lastRealtimeBidKeyRef = useRef<string | null>(null);
+  const lastRealtimeCallStageKeyRef = useRef<string | null>(null);
 
   const dismissSoldPopup = useCallback(() => {
     setSoldPopup(null);
@@ -189,6 +191,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let eventSource: EventSource | null = null;
 
     const applyFullState = (nextState: AuctionState) => {
+      if (!nextState || nextState.lastUpdated === lastStateVersionRef.current) return;
       lastStateVersionRef.current = nextState?.lastUpdated || '';
       setState(nextState);
       setLoading(false);
@@ -201,14 +204,22 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           applyFullState(payload?.payload || payload);
         } else if (type === 'BID_UPDATE') {
           setState((prev) => (prev ? { ...prev, liveBidding: payload } : prev));
-          soundEffects.playBidSound();
+          const bidKey = `${payload?.playerId}:${payload?.currentBid}:${payload?.currentBidderTeamId}:${payload?.lastBidTimestamp}`;
+          if (bidKey !== lastRealtimeBidKeyRef.current) {
+            lastRealtimeBidKeyRef.current = bidKey;
+            soundEffects.playBidSound();
+          }
         } else if (type === 'CALL_STAGE_UPDATE') {
           setState((prev) =>
             prev
               ? { ...prev, liveBidding: { ...prev.liveBidding, callStage: payload.callStage } }
               : prev
           );
-          soundEffects.playGavelWarning();
+          const callStageKey = `${payload?.callStage}:${state?.currentPlayerId}`;
+          if (callStageKey !== lastRealtimeCallStageKeyRef.current) {
+            lastRealtimeCallStageKeyRef.current = callStageKey;
+            soundEffects.playGavelWarning();
+          }
         } else if (type === 'player_sold') {
           if (payload?.id && payload.id !== lastProcessedSoldIdRef.current) {
             lastProcessedSoldIdRef.current = payload.id;
@@ -247,6 +258,9 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         source.onerror = () => {
           source.close();
           if (eventSource === source) eventSource = null;
+          if (!isUnmounted) {
+            window.setTimeout(connectSse, 1000);
+          }
         };
       } catch {
         eventSource = null;
@@ -267,11 +281,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (isUnmounted) return;
           setWsConnected(true);
           setError(null);
-          // Close SSE fallback once native WebSocket is operational
-          if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-          }
         };
 
         socket.onmessage = (event) => {
@@ -307,10 +316,14 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     }
 
+    // Keep SSE connected even when WebSocket reports open. Some hosting proxies
+    // complete the WebSocket handshake but drop later broadcast frames.
+    connectSse();
     connectWs();
 
     // Adaptive sync fallback: only polls if WebSocket is disconnected!
     const syncInterval = window.setInterval(() => {
+      if (!eventSource) connectSse();
       if (
         (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) &&
         !eventSource
