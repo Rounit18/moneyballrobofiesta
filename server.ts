@@ -339,33 +339,99 @@ function broadcast(eventType: string, data: any) {
 }
 
 let stateLoadedFromDb = false;
-let lastDbFetchTime = 0;
-const DB_CACHE_TTL_MS = 600; // 600ms cache TTL for fast serverless multi-instance sync
+let localBootstrapLoaded = false;
+let authoritativeLoadPromise: Promise<void> | null = null;
 
-async function ensureStateLoaded(forceRefresh = false) {
-  const now = Date.now();
-  if (!forceRefresh && stateLoadedFromDb && now - lastDbFetchTime < DB_CACHE_TTL_MS) {
-    return;
+// Auction mutations must be serialized. Without this queue, two fast requests can both
+// read the same lot, mutate separate snapshots, and let the slower persistence write win.
+let mutationTail: Promise<void> = Promise.resolve();
+
+// Persistence is deliberately decoupled from the live auction path. The latest snapshot
+// is always broadcast immediately; Supabase writes run one-at-a-time and coalesce bursts
+// of bids/stage changes into the newest state.
+let localStateRevision = 0;
+let persistedStateRevision = 0;
+let persistenceWorkerRunning = false;
+let pendingPersistence: { revision: number; json: string } | null = null;
+
+function isStateMutation(req: Request): boolean {
+  const apiPath = req.path.replace(/^\/api/, '');
+  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !apiPath.startsWith('/auth');
+}
+
+async function acquireMutationLock(): Promise<() => void> {
+  const previous = mutationTail;
+  let release!: () => void;
+  mutationTail = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  return release;
+}
+
+async function flushPersistenceQueue(): Promise<void> {
+  if (persistenceWorkerRunning) return;
+  persistenceWorkerRunning = true;
+
+  try {
+    while (pendingPersistence) {
+      const snapshot = pendingPersistence;
+      pendingPersistence = null;
+
+      // File persistence is also off the request path; the in-memory state is the
+      // source of truth for the live process and the queued snapshot is durable.
+      try {
+        const filePath = path.join(__dirname, 'auction_state.json');
+        await fs.promises.writeFile(filePath, snapshot.json, 'utf-8');
+      } catch {}
+
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('users').upsert({
+            username: '__auction_state__',
+            password: snapshot.json,
+            role: 'system'
+          }, { onConflict: 'username' });
+          if (error) {
+            console.error('[STATE] Supabase upsert error:', error.message);
+          } else {
+            persistedStateRevision = Math.max(persistedStateRevision, snapshot.revision);
+          }
+        } catch (e) {
+          console.error('[STATE] Supabase save error:', e);
+        }
+      } else {
+        persistedStateRevision = Math.max(persistedStateRevision, snapshot.revision);
+      }
+    }
+  } finally {
+    persistenceWorkerRunning = false;
+    if (pendingPersistence) {
+      void flushPersistenceQueue();
+    }
   }
-  lastDbFetchTime = now;
+}
 
-  // 1. Try Supabase persistent state
+async function loadAuthoritativeState(): Promise<void> {
+  // Supabase is authoritative once available. The local file is only a bootstrap
+  // so the first screen can render while this remote read is in flight.
   if (supabase) {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('users')
         .select('password')
         .eq('username', '__auction_state__')
         .single();
-      if (data && data.password) {
+      if (data?.password) {
         const parsed = JSON.parse(data.password);
         if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
           auctionState = parsed;
-          // Always sync set names from code (overrides any stale DB names)
           auctionState.playerSets = INITIAL_SETS.map(s => ({
             ...s,
             status: (auctionState.playerSets?.find((ds: any) => ds.id === s.id)?.status ?? s.status)
           }));
+          syncTeams();
+          syncPlayerCards();
           cachedStateTimestamp = '';
           cachedStateJson = '';
           stateLoadedFromDb = true;
@@ -377,55 +443,40 @@ async function ensureStateLoaded(forceRefresh = false) {
     }
   }
 
-  // 2. Try Local File fallback
-  try {
-    const filePath = path.join(__dirname, 'auction_state.json');
-    if (fs.existsSync(filePath)) {
-      const fileData = fs.readFileSync(filePath, 'utf-8');
-      const parsed = JSON.parse(fileData);
-      if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
-        auctionState = parsed;
-        // Always sync set names from code (overrides any stale file names)
-        auctionState.playerSets = INITIAL_SETS.map(s => ({
-          ...s,
-          status: (auctionState.playerSets?.find((ds: any) => ds.id === s.id)?.status ?? s.status)
-        }));
-        cachedStateTimestamp = '';
-        cachedStateJson = '';
-        stateLoadedFromDb = true;
-      }
-    }
-  } catch (e) {
-    console.error('[STATE] Local file load error:', e);
+  if (localBootstrapLoaded) {
+    stateLoadedFromDb = true;
   }
 }
 
-async function persistState(): Promise<void> {
-  auctionState.lastUpdated = new Date().toISOString();
+async function ensureStateLoaded(waitForAuthoritative = false): Promise<void> {
+  if (stateLoadedFromDb) return;
+
+  if (!authoritativeLoadPromise) {
+    authoritativeLoadPromise = loadAuthoritativeState().finally(() => {
+      authoritativeLoadPromise = null;
+    });
+  }
+
+  // GETs can use the local bootstrap immediately. Mutations wait so the first
+  // auction action cannot write over a newer Supabase state.
+  if (localBootstrapLoaded && !waitForAuthoritative) {
+    void authoritativeLoadPromise;
+    return;
+  }
+
+  await authoritativeLoadPromise;
+}
+
+function persistState(): void {
+  const previousTimestamp = Date.parse(auctionState.lastUpdated) || 0;
+  auctionState.lastUpdated = new Date(Math.max(Date.now(), previousTimestamp + 1)).toISOString();
+  localStateRevision += 1;
   cachedStateTimestamp = auctionState.lastUpdated;
   cachedStateJson = JSON.stringify({ type: 'STATE_UPDATE', payload: auctionState });
+  const stateJson = JSON.stringify(auctionState);
 
-  // 1. Save to local file (swallow file errors on read-only serverless runtimes)
-  try {
-    const filePath = path.join(__dirname, 'auction_state.json');
-    fs.writeFileSync(filePath, JSON.stringify(auctionState), 'utf-8');
-  } catch {}
-
-  // 2. Save to Supabase database with onConflict: 'username'
-  if (supabase) {
-    try {
-      const { error } = await supabase.from('users').upsert({
-        username: '__auction_state__',
-        password: JSON.stringify(auctionState),
-        role: 'system'
-      }, { onConflict: 'username' });
-      if (error) {
-        console.error('[STATE] Supabase upsert error:', error.message);
-      }
-    } catch (e) {
-      console.error('[STATE] Supabase save error:', e);
-    }
-  }
+  pendingPersistence = { revision: localStateRevision, json: stateJson };
+  void flushPersistenceQueue();
 }
 
 // Sequential lot forward finder (maintains set order without improper jumpy switching)
@@ -472,8 +523,8 @@ function getPrevUpcomingPlayer(fromId: string | null): Player | null {
   return auctionState.players.find((p) => p.status === 'upcoming') || null;
 }
 
-async function broadcastStateUpdate(): Promise<void> {
-  await persistState();
+function broadcastStateUpdate(): void {
+  persistState();
   broadcast('STATE_UPDATE', auctionState);
 }
 
@@ -494,6 +545,26 @@ function syncPlayerCards() {
       p.primaryPosition = initPlayer.primaryPosition;
       p.notes = initPlayer.notes;
     }
+  }
+}
+
+function bootstrapLocalState() {
+  try {
+    const filePath = path.join(__dirname, 'auction_state.json');
+    if (!fs.existsSync(filePath)) return;
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.teams) && parsed.players.length > 0) {
+      auctionState = parsed;
+      auctionState.playerSets = INITIAL_SETS.map(s => ({
+        ...s,
+        status: (auctionState.playerSets?.find((ds: any) => ds.id === s.id)?.status ?? s.status)
+      }));
+      cachedStateTimestamp = '';
+      cachedStateJson = '';
+      localBootstrapLoaded = true;
+    }
+  } catch (e) {
+    console.error('[STATE] Local bootstrap error:', e);
   }
 }
 
@@ -523,7 +594,9 @@ interface CachedAuthUser {
 }
 const authCache = new Map<string, CachedAuthUser>();
 
-// Sync teams and player cards once at startup
+// Bootstrap the first screen immediately, then hydrate from Supabase in the
+// background before the first mutation. Sync static definitions after loading.
+bootstrapLocalState();
 syncTeams();
 syncPlayerCards();
 
@@ -546,7 +619,7 @@ app.use('/logos', express.static(path.join(__dirname, 'public/logos'), {
 }));
 
 // Vercel rewrite normalization & API state hydration
-app.use(async (req, _res, next) => {
+app.use(async (req, res, next) => {
   // Normalize URL if Vercel strips /api prefix
   if (
     !req.url.startsWith('/api') &&
@@ -563,10 +636,31 @@ app.use(async (req, _res, next) => {
     }
   }
 
-  if (req.url.startsWith('/api')) {
-    await ensureStateLoaded();
+  const needsMutationLock = req.url.startsWith('/api') && isStateMutation(req);
+  let unlock = () => {};
+
+  if (needsMutationLock) {
+    const release = await acquireMutationLock();
+    let released = false;
+    unlock = () => {
+      if (!released) {
+        released = true;
+        release();
+      }
+    };
+    res.once('finish', unlock);
+    res.once('close', unlock);
   }
-  next();
+
+  try {
+    if (req.url.startsWith('/api')) {
+      await ensureStateLoaded(needsMutationLock);
+    }
+    next();
+  } catch (error) {
+    unlock();
+    next(error);
+  }
 });
 
 // SSE Stream endpoint for fallback
@@ -802,7 +896,7 @@ app.get('/api/state', async (req: Request, res: Response) => {
   // Unified Live Bidding Endpoint (Admin verbal entry & Franchise team direct bids)
   const handleBidRequest = async (req: Request, res: Response) => {
     await ensureStateLoaded(true);
-    const { amount, teamId } = req.body;
+    const { amount, teamId, playerId: requestedPlayerId } = req.body;
     const numericAmount = Number(amount);
 
     if (isNaN(numericAmount) || numericAmount <= 0) {
@@ -833,6 +927,15 @@ app.get('/api/state', async (req: Request, res: Response) => {
     }
 
     const currentPlayer = auctionState.players.find((p) => p.id === auctionState.currentPlayerId);
+    if (requestedPlayerId && requestedPlayerId !== currentPlayer?.id) {
+      return res.status(409).json({ error: 'This bid was for a previous lot' });
+    }
+    if (!currentPlayer || auctionState.liveBidding.playerId !== currentPlayer.id) {
+      return res.status(409).json({ error: 'Auction lot is changing; please retry the bid' });
+    }
+    if (currentPlayer.status !== 'upcoming' && currentPlayer.status !== 'live') {
+      return res.status(409).json({ error: 'This player is no longer available for bidding' });
+    }
     const basePrice = currentPlayer?.basePrice || 10;
 
     // Must be at least the base price if opening bid
@@ -851,6 +954,7 @@ app.get('/api/state', async (req: Request, res: Response) => {
       callStage: 'NORMAL',
       lastBidTimestamp: new Date().toISOString(),
     };
+    currentPlayer.status = 'live';
 
     await persistState();
     broadcast('BID_UPDATE', auctionState.liveBidding);
@@ -863,10 +967,13 @@ app.get('/api/state', async (req: Request, res: Response) => {
   // ADMIN: Set Call Stage (NORMAL, GOING_ONCE, GOING_TWICE, SOLD)
   app.post('/api/admin/call-stage', async (req: Request, res: Response) => {
     await ensureStateLoaded(true);
-    const { callStage } = req.body;
+    const { callStage, playerId: requestedPlayerId } = req.body;
     const validStages: CallStage[] = ['NORMAL', 'GOING_ONCE', 'GOING_TWICE', 'SOLD'];
     if (!validStages.includes(callStage)) {
       return res.status(400).json({ error: 'Invalid call stage' });
+    }
+    if (requestedPlayerId && requestedPlayerId !== auctionState.liveBidding.playerId) {
+      return res.status(409).json({ error: 'This call was for a previous lot' });
     }
 
     auctionState.liveBidding.callStage = callStage;
@@ -917,6 +1024,15 @@ app.get('/api/state', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Player not found' });
     }
 
+    // Sold lots are final. An UNSOLD lot may be deliberately brought back into
+    // the live queue from the admin selector without resetting any other lot.
+    if (player.status === 'sold' || player.status === 'transfer_available' || player.status === 'transferred') {
+      return res.status(409).json({ error: 'Sold players cannot be returned to the auction' });
+    }
+    if (player.status === 'unsold') {
+      player.status = 'upcoming';
+    }
+
     auctionState.currentPlayerId = player.id;
     if (player.setId) {
       auctionState.activeSetId = player.setId;
@@ -939,6 +1055,10 @@ app.get('/api/state', async (req: Request, res: Response) => {
   // ADMIN: Next player (strictly sequential upcoming lot navigation)
   app.post('/api/admin/next-player', async (_req: Request, res: Response) => {
     await ensureStateLoaded(true);
+    const requestedFromPlayerId = _req.body?.fromPlayerId;
+    if (requestedFromPlayerId && requestedFromPlayerId !== auctionState.currentPlayerId) {
+      return res.status(409).json({ error: 'Auction has already advanced to the next lot' });
+    }
     const nextPlayer = getNextUpcomingPlayer(auctionState.currentPlayerId);
     if (!nextPlayer) {
       return res.status(400).json({ error: 'No upcoming players remaining' });
@@ -964,6 +1084,10 @@ app.get('/api/state', async (req: Request, res: Response) => {
   // ADMIN: Previous player (sequential backward navigation)
   app.post('/api/admin/prev-player', async (_req: Request, res: Response) => {
     await ensureStateLoaded(true);
+    const requestedFromPlayerId = _req.body?.fromPlayerId;
+    if (requestedFromPlayerId && requestedFromPlayerId !== auctionState.currentPlayerId) {
+      return res.status(409).json({ error: 'Auction lot changed before the previous action completed' });
+    }
     const prevPlayer = getPrevUpcomingPlayer(auctionState.currentPlayerId);
     if (!prevPlayer) {
       return res.status(400).json({ error: 'No upcoming players remaining' });
@@ -995,6 +1119,13 @@ app.get('/api/state', async (req: Request, res: Response) => {
     const player = auctionState.players.find((p) => p.id === playerId);
     if (!player) {
       return res.status(404).json({ error: 'Player not found' });
+    }
+
+    if (auctionState.currentPlayerId !== player.id || auctionState.liveBidding.playerId !== player.id) {
+      return res.status(409).json({ error: 'This lot is no longer the active auction player' });
+    }
+    if (player.status !== 'upcoming' && player.status !== 'live') {
+      return res.status(409).json({ error: 'This player has already been finalized' });
     }
 
     const team = auctionState.teams.find((t) => t.id === teamId);
@@ -1114,6 +1245,13 @@ app.get('/api/state', async (req: Request, res: Response) => {
     const player = auctionState.players.find((p) => p.id === playerId);
     if (!player) {
       return res.status(404).json({ error: 'Player not found' });
+    }
+
+    if (auctionState.currentPlayerId !== player.id || auctionState.liveBidding.playerId !== player.id) {
+      return res.status(409).json({ error: 'This lot is no longer the active auction player' });
+    }
+    if (player.status !== 'upcoming' && player.status !== 'live') {
+      return res.status(409).json({ error: 'This player has already been finalized' });
     }
 
     const now = new Date().toISOString();

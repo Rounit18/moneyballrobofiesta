@@ -387,7 +387,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const res = await fetch('/api/bid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, teamId }),
+        body: JSON.stringify({ amount, teamId, playerId: state?.currentPlayerId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -416,7 +416,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const res = await fetch('/api/admin/call-stage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ callStage }),
+        body: JSON.stringify({ callStage, playerId: state?.currentPlayerId }),
       });
       return res.ok;
     } catch {
@@ -431,7 +431,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ setId }),
       });
-      refreshState();
       return res.ok;
     } catch {
       return false;
@@ -445,7 +444,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId }),
       });
-      refreshState();
       return res.ok;
     } catch {
       return false;
@@ -454,8 +452,11 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const nextPlayer = async () => {
     try {
-      const res = await fetch('/api/admin/next-player', { method: 'POST' });
-      refreshState();
+      const res = await fetch('/api/admin/next-player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromPlayerId: state?.currentPlayerId }),
+      });
       return res.ok;
     } catch {
       return false;
@@ -464,8 +465,11 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const prevPlayer = async () => {
     try {
-      const res = await fetch('/api/admin/prev-player', { method: 'POST' });
-      refreshState();
+      const res = await fetch('/api/admin/prev-player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromPlayerId: state?.currentPlayerId }),
+      });
       return res.ok;
     } catch {
       return false;
@@ -487,7 +491,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         lastProcessedSoldIdRef.current = data.notification.id;
         triggerCelebration(data.notification);
       }
-      refreshState();
       return { success: true };
     } catch {
       return { success: false, error: 'Network error' };
@@ -509,7 +512,6 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         lastProcessedUnsoldIdRef.current = data.notification.id;
         triggerUnsold(data.notification);
       }
-      refreshState();
       return { success: true };
     } catch {
       return { success: false, error: 'Network error' };
