@@ -188,6 +188,65 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let isUnmounted = false;
     let eventSource: EventSource | null = null;
 
+    const applyFullState = (nextState: AuctionState) => {
+      lastStateVersionRef.current = nextState?.lastUpdated || '';
+      setState(nextState);
+      setLoading(false);
+    };
+
+    const handleRealtimeEvent = (type: string, rawPayload: string) => {
+      try {
+        const payload = rawPayload ? JSON.parse(rawPayload) : null;
+        if (type === 'INIT_STATE' || type === 'STATE_UPDATE' || type === 'state_update') {
+          applyFullState(payload?.payload || payload);
+        } else if (type === 'BID_UPDATE') {
+          setState((prev) => (prev ? { ...prev, liveBidding: payload } : prev));
+          soundEffects.playBidSound();
+        } else if (type === 'CALL_STAGE_UPDATE') {
+          setState((prev) =>
+            prev
+              ? { ...prev, liveBidding: { ...prev.liveBidding, callStage: payload.callStage } }
+              : prev
+          );
+          soundEffects.playGavelWarning();
+        } else if (type === 'player_sold') {
+          if (payload?.id && payload.id !== lastProcessedSoldIdRef.current) {
+            lastProcessedSoldIdRef.current = payload.id;
+            triggerCelebration(payload);
+          }
+        } else if (type === 'player_unsold') {
+          const notification = payload?.notification || payload;
+          if (notification?.id && notification.id !== lastProcessedUnsoldIdRef.current) {
+            lastProcessedUnsoldIdRef.current = notification.id;
+            triggerUnsold(notification);
+          }
+        }
+      } catch (err) {
+        console.error('Error handling realtime event:', err);
+      }
+    };
+
+    function connectSse() {
+      if (isUnmounted || eventSource) return;
+      try {
+        const source = new EventSource('/api/events');
+        eventSource = source;
+        const forward = (type: string) => (event: MessageEvent) => handleRealtimeEvent(type, event.data);
+        source.addEventListener('state_update', forward('state_update'));
+        source.addEventListener('STATE_UPDATE', forward('STATE_UPDATE'));
+        source.addEventListener('BID_UPDATE', forward('BID_UPDATE'));
+        source.addEventListener('CALL_STAGE_UPDATE', forward('CALL_STAGE_UPDATE'));
+        source.addEventListener('player_sold', forward('player_sold'));
+        source.addEventListener('player_unsold', forward('player_unsold'));
+        source.onerror = () => {
+          source.close();
+          if (eventSource === source) eventSource = null;
+        };
+      } catch {
+        eventSource = null;
+      }
+    }
+
     function connectWs() {
       if (isUnmounted) return;
 
@@ -213,38 +272,10 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (isUnmounted) return;
           try {
             const msg = JSON.parse(event.data);
-            if (msg.type === 'INIT_STATE' || msg.type === 'STATE_UPDATE') {
-              lastStateVersionRef.current = msg.payload?.lastUpdated || '';
-              setState(msg.payload);
-              setLoading(false);
-            } else if (msg.type === 'BID_UPDATE') {
-              setState((prev) => (prev ? { ...prev, liveBidding: msg.payload } : prev));
-              soundEffects.playBidSound();
-            } else if (msg.type === 'CALL_STAGE_UPDATE') {
-              setState((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      liveBidding: { ...prev.liveBidding, callStage: msg.payload.callStage },
-                    }
-                  : prev
-              );
-              soundEffects.playGavelWarning();
-            } else if (msg.type === 'player_sold') {
-              triggerCelebration(msg.payload);
-            } else if (msg.type === 'player_unsold') {
-              triggerUnsold(msg.payload.notification || {
-                id: `unsold-${Date.now()}`,
-                playerId: msg.payload.player?.id || '',
-                playerName: msg.payload.player?.name || 'Player',
-                playerPhoto: msg.payload.player?.photo || '',
-                club: msg.payload.player?.currentClub || '',
-                position: msg.payload.player?.position || 'FWD',
-                basePrice: msg.payload.player?.basePrice || 60,
-                timestamp: new Date().toISOString(),
-              });
-            } else if (msg.type === 'AUCTION_RESET') {
+            if (msg.type === 'AUCTION_RESET') {
               refreshState();
+            } else {
+              handleRealtimeEvent(msg.type, JSON.stringify(msg.payload));
             }
           } catch (err) {
             console.error('Error handling WebSocket message:', err);
@@ -254,6 +285,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         socket.onclose = () => {
           if (isUnmounted) return;
           setWsConnected(false);
+          connectSse();
           // Auto reconnect after 2 seconds
           reconnectTimeoutRef.current = window.setTimeout(connectWs, 2000);
         };
@@ -273,7 +305,10 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Adaptive sync fallback: only polls if WebSocket is disconnected!
     const syncInterval = window.setInterval(() => {
-      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      if (
+        (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) &&
+        !eventSource
+      ) {
         refreshState();
       }
     }, 1500);
