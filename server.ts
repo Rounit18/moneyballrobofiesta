@@ -1235,7 +1235,13 @@ app.get('/api/state', async (req: Request, res: Response) => {
     broadcast('player_sold', notif);
     await broadcastStateUpdate();
 
-    res.json({ success: true, notification: notif, remainingBalance: team.remainingBalance });
+    res.json({
+      success: true,
+      notification: notif,
+      remainingBalance: team.remainingBalance,
+      currentPlayerId: auctionState.currentPlayerId,
+      state: auctionState,
+    });
   });
 
   // ADMIN: Mark UNSOLD

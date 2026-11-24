@@ -522,6 +522,10 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (!res.ok) {
         return { success: false, error: data.error || 'Could not sell player' };
       }
+      if (data.state) {
+        lastStateVersionRef.current = data.state.lastUpdated || '';
+        setState(data.state);
+      }
       if (data.notification) {
         lastProcessedSoldIdRef.current = data.notification.id;
         triggerCelebration(data.notification);
