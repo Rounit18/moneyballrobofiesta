@@ -40,6 +40,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   };
 
   const globalState = state?.globalState || 'AUCTION_LIVE';
+  const canViewPlayerSets = currentUser?.role === 'admin';
 
   const getGlobalStateBadge = () => {
     switch (globalState) {
@@ -80,7 +81,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
   const navItems = [
     { id: 'auction', label: 'LIVE AUCTION', icon: Gavel },
-    { id: 'sets', label: 'PLAYER SETS (200)', icon: Layers },
+    ...(canViewPlayerSets ? [{ id: 'sets', label: 'PLAYER SETS (200)', icon: Layers }] : []),
     { id: 'teams', label: 'TEAMS & PURSE', icon: Users },
     { id: 'my_team', label: 'MY TEAM', icon: Shield },
     {

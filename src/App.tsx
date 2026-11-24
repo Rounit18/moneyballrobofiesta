@@ -186,7 +186,7 @@ const MainAuctionContent: React.FC = () => {
             )
           )}
 
-          {currentTab === 'sets' && <PlayerSetsView />}
+          {currentTab === 'sets' && isAdmin ? <PlayerSetsView /> : null}
 
           {currentTab === 'teams' && <TeamsView />}
 
